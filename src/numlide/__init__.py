@@ -50,7 +50,7 @@ class Wrapper:
         variables = vars_from_shape(self.shape)
         if isinstance(other, Wrapper):
             f[variables] = self.inner[variables] + other.inner[variables]
-            shape=np.broadcast_shapes(self.shape, other.shape)
+            shape = np.broadcast_shapes(self.shape, other.shape)
         else:
             f[variables] = self.inner[variables] + other
             shape = self.shape
@@ -73,6 +73,8 @@ class Wrapper:
 
 
 def apply(w: Wrapper, f: Callable[[hl.Expr], hl.Expr]) -> Wrapper:
+    if not isinstance(w, Wrapper):
+        w = array(w)
     func = hl.Func()
     variables = vars_from_shape(w.shape)
     func[variables] = f(w.inner[variables])
@@ -82,16 +84,23 @@ def apply(w: Wrapper, f: Callable[[hl.Expr], hl.Expr]) -> Wrapper:
 def sin(w: Wrapper) -> Wrapper:
     return apply(w, hl.sin)
 
+
 def cos(w: Wrapper) -> Wrapper:
     return apply(w, hl.cos)
+
 
 def tan(w: Wrapper) -> Wrapper:
     return apply(w, hl.tan)
 
+
 def sqrt(w: Wrapper) -> Wrapper:
     return apply(w, hl.sqrt)
 
+
 def sum(w: Wrapper) -> Wrapper:
+    if not isinstance(w, Wrapper):
+        w = array(w)
+
     f = hl.Func()
     f[()] = 0.0
     rdom_elements = list()
