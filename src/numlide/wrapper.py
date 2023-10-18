@@ -59,6 +59,9 @@ class Wrapper:
             shape = self.shape
         return Wrapper(inner=f, shape=shape)
 
+    def __radd__(self, other) -> Wrapper:
+        return self + other
+
     def __sub__(self, other) -> Wrapper:
         if not isinstance(other, Wrapper) or isinstance(other, int) or isinstance(other, float):
             other = wrap(other)
@@ -73,6 +76,9 @@ class Wrapper:
             f[variables] = self.inner[variables] - other
             shape = self.shape
         return Wrapper(inner=f, shape=shape)
+
+    def __rsub__(self, other) -> Wrapper:
+        return wrap(other) - self
 
     def __mul__(self, other) -> Wrapper:
         if not isinstance(other, Wrapper) or isinstance(other, int) or isinstance(other, float):
@@ -90,6 +96,9 @@ class Wrapper:
             shape = self.shape
         return Wrapper(inner=f, shape=shape)
 
+    def __rmul__(self, other) -> Wrapper:
+        return self * other
+
     def __truediv__(self, other) -> Wrapper:
         if not isinstance(other, Wrapper) or isinstance(other, int) or isinstance(other, float):
             other = wrap(other)
@@ -104,6 +113,9 @@ class Wrapper:
             f[variables] = self.inner[variables] / other
             shape = self.shape
         return Wrapper(inner=f, shape=shape)
+
+    def __rtruediv__(self, other) -> Wrapper:
+        return wrap(other) / self
 
     def __floordiv__(self, other) -> Wrapper:
         if not isinstance(other, Wrapper) or isinstance(other, int) or isinstance(other, float):
@@ -120,6 +132,9 @@ class Wrapper:
             shape = self.shape
         return Wrapper(inner=f, shape=shape)
 
+    def __rfloordiv__(self, other) -> Wrapper:
+        return wrap(other) // self
+
     def __mod__(self, other) -> Wrapper:
         if not isinstance(other, Wrapper) or isinstance(other, int) or isinstance(other, float):
             other = wrap(other)
@@ -134,6 +149,9 @@ class Wrapper:
             f[variables] = self.inner[variables] % other
             shape = self.shape
         return Wrapper(inner=f, shape=shape)
+
+    def __rmod__(self, other) -> Wrapper:
+        return wrap(other) % self
 
     def __pow__(self, other) -> Wrapper:
         if not isinstance(other, Wrapper) or isinstance(other, int) or isinstance(other, float):
@@ -150,6 +168,9 @@ class Wrapper:
             shape = self.shape
         return Wrapper(inner=f, shape=shape)
 
+    def __rpow__(self, other) -> Wrapper:
+        return wrap(other) ** self
+
     def realize(self):
         return self.inner.realize(tr(self.shape))
 
@@ -158,6 +179,7 @@ class Wrapper:
 
     def to_numpy(self):
         return np.asanyarray(self.realize())
+
 
 def array(values):
     np_array = np.array(values)
