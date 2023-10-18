@@ -1,6 +1,7 @@
-import numlide as nl
 import halide as hl
+from ..wrapper import Wrapper
+from ..math import sqrt, sum
 
 
-def norm(w: nl.Wrapper):
-    return nl.sqrt(nl.sum(w**2))
+def norm(w: Wrapper):
+    return sqrt(sum(w**2))
