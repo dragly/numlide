@@ -40,26 +40,115 @@ class Wrapper:
                 halide_step = 0 if extent == 1 else step
                 right_variables += (halide_step * var + start,)
                 shape += (extent,)
-        f = hl.Func()
+        f = hl.Func("getitem")
         f.__setitem__(tr(left_variables), self.inner.__getitem__(tr(right_variables)))
         return Wrapper(inner=f, shape=shape)
 
     def __add__(self, other) -> Wrapper:
-        f = hl.Func()
+        if not isinstance(other, Wrapper) or isinstance(other, int) or isinstance(other, float):
+            other = wrap(other)
+        f = hl.Func("add")
         variables = vars_from_shape(self.shape)
         if isinstance(other, Wrapper):
-            f[variables] = self.inner[variables] + other.inner[variables]
+            other_variables = vars_from_shape(other.shape)
+            new_variables = variables + other_variables
+            f[new_variables] = self.inner[variables] + other.inner[other_variables]
             shape = np.broadcast_shapes(self.shape, other.shape)
         else:
             f[variables] = self.inner[variables] + other
             shape = self.shape
         return Wrapper(inner=f, shape=shape)
 
-    def __pow__(self, v) -> Wrapper:
-        f = hl.Func()
+    def __sub__(self, other) -> Wrapper:
+        if not isinstance(other, Wrapper) or isinstance(other, int) or isinstance(other, float):
+            other = wrap(other)
+        f = hl.Func("sub")
         variables = vars_from_shape(self.shape)
-        f[variables] = self.inner[variables] ** v
-        return Wrapper(inner=f, shape=self.shape)
+        if isinstance(other, Wrapper):
+            other_variables = vars_from_shape(other.shape)
+            new_variables = variables + other_variables
+            f[new_variables] = self.inner[variables] - other.inner[other_variables]
+            shape = np.broadcast_shapes(self.shape, other.shape)
+        else:
+            f[variables] = self.inner[variables] - other
+            shape = self.shape
+        return Wrapper(inner=f, shape=shape)
+
+    def __mul__(self, other) -> Wrapper:
+        if not isinstance(other, Wrapper) or isinstance(other, int) or isinstance(other, float):
+            other = wrap(other)
+
+        f = hl.Func("mul")
+        variables = vars_from_shape(self.shape)
+        if isinstance(other, Wrapper):
+            other_variables = vars_from_shape(other.shape)
+            new_variables = variables + other_variables
+            f[new_variables] = self.inner[variables] * other.inner[other_variables]
+            shape = np.broadcast_shapes(self.shape, other.shape)
+        else:
+            f[variables] = self.inner[variables] * other
+            shape = self.shape
+        return Wrapper(inner=f, shape=shape)
+
+    def __truediv__(self, other) -> Wrapper:
+        if not isinstance(other, Wrapper) or isinstance(other, int) or isinstance(other, float):
+            other = wrap(other)
+        f = hl.Func("truediv")
+        variables = vars_from_shape(self.shape)
+        if isinstance(other, Wrapper):
+            other_variables = vars_from_shape(other.shape)
+            new_variables = variables + other_variables
+            f[new_variables] = self.inner[variables] / other.inner[other_variables]
+            shape = np.broadcast_shapes(self.shape, other.shape)
+        else:
+            f[variables] = self.inner[variables] / other
+            shape = self.shape
+        return Wrapper(inner=f, shape=shape)
+
+    def __floordiv__(self, other) -> Wrapper:
+        if not isinstance(other, Wrapper) or isinstance(other, int) or isinstance(other, float):
+            other = wrap(other)
+        f = hl.Func("floordiv")
+        variables = vars_from_shape(self.shape)
+        if isinstance(other, Wrapper):
+            other_variables = vars_from_shape(other.shape)
+            new_variables = variables + other_variables
+            f[new_variables] = self.inner[variables] // other.inner[other_variables]
+            shape = np.broadcast_shapes(self.shape, other.shape)
+        else:
+            f[variables] = self.inner[variables] // other
+            shape = self.shape
+        return Wrapper(inner=f, shape=shape)
+
+    def __mod__(self, other) -> Wrapper:
+        if not isinstance(other, Wrapper) or isinstance(other, int) or isinstance(other, float):
+            other = wrap(other)
+        f = hl.Func("mod")
+        variables = vars_from_shape(self.shape)
+        if isinstance(other, Wrapper):
+            other_variables = vars_from_shape(other.shape)
+            new_variables = variables + other_variables
+            f[new_variables] = self.inner[variables] % other.inner[other_variables]
+            shape = np.broadcast_shapes(self.shape, other.shape)
+        else:
+            f[variables] = self.inner[variables] % other
+            shape = self.shape
+        return Wrapper(inner=f, shape=shape)
+
+    def __pow__(self, other) -> Wrapper:
+        if not isinstance(other, Wrapper) or isinstance(other, int) or isinstance(other, float):
+            other = wrap(other)
+        f = hl.Func("pow")
+        variables = vars_from_shape(self.shape)
+        if isinstance(other, Wrapper):
+            other_variables = vars_from_shape(other.shape)
+            new_variables = variables + other_variables
+            f[new_variables] = self.inner[variables] ** other.inner[other_variables]
+            shape = np.broadcast_shapes(self.shape, other.shape)
+        else:
+            f[variables] = self.inner[variables] ** other
+            shape = self.shape
+        return Wrapper(inner=f, shape=shape)
 
     def realize(self):
         return self.inner.realize(tr(self.shape))

@@ -1,13 +1,16 @@
 import halide as hl
 from collections.abc import Callable
-from .wrapper import Wrapper, array
+
+from .schedule import ScheduleStrategy
+from .wrapper import Wrapper, wrap
 from .utils import vars_from_shape, tr
+import numpy as np
 
 
 def apply(w: Wrapper, f: Callable[[hl.Expr], hl.Expr]) -> Wrapper:
     if not isinstance(w, Wrapper):
-        w = array(w)
-    func = hl.Func()
+        w = wrap(w)
+    func = hl.Func(f.__name__)
     variables = vars_from_shape(w.shape)
     func[variables] = f(w.inner[variables])
     return Wrapper(inner=func, shape=w.shape)
@@ -29,12 +32,12 @@ def sqrt(w: Wrapper) -> Wrapper:
     return apply(w, hl.sqrt)
 
 
-def sum(w: Wrapper) -> Wrapper:
+def sum(w: Wrapper, schedule_strategy=ScheduleStrategy.auto) -> Wrapper:
     if not isinstance(w, Wrapper):
-        w = array(w)
+        w = wrap(w)
 
-    f = hl.Func()
-    f[()] = 0.0
+    f = hl.Func("sum")
+    f[()] = hl.cast(w.inner.type(), 0)
     rdom_elements = list()
     for extent in w.shape:
         rdom_elements.append((0, extent))
@@ -44,4 +47,15 @@ def sum(w: Wrapper) -> Wrapper:
     for i in range(rdom.dimensions()):
         rdom_accesors.append(rdom[i])
     f[()] += w.inner[rdom_accesors]
+
+    if schedule_strategy == ScheduleStrategy.auto:
+        f.compute_root()
+
     return Wrapper(inner=f, shape=tuple())
+
+
+def mean(w: Wrapper, schedule_strategy=ScheduleStrategy.auto) -> Wrapper:
+    if not isinstance(w, Wrapper):
+        w = wrap(w)
+
+    return sum(w, schedule_strategy=ScheduleStrategy.auto) / np.prod(w.shape)

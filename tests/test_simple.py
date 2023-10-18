@@ -11,7 +11,7 @@ def test_linalg_norm():
     np.testing.assert_allclose(result_nl.to_numpy(), result_np)
 
 
-def test_simple():
+def test_box_filter():
     image = np.random.randn(64, 64)
 
     def filtered(image):
@@ -24,5 +24,18 @@ def test_simple():
 
     np.testing.assert_allclose(result_nl.to_numpy(), result_np)
 
+
+def test_mean():
+    np.random.seed(42)
+    image = np.random.randn(64, 48)
+
+    result_np = np.mean(image)
+    result_nl = nl.mean(image)
+
+    out = result_nl * image
+
+    np.testing.assert_allclose(result_nl.to_numpy(), result_np)
+
+
 if __name__ == "__main__":
-    test_simple()
+    test_mean()

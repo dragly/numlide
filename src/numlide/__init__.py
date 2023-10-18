@@ -5,7 +5,7 @@ import halide as hl
 import numpy as np
 from dataclasses import dataclass
 from . import linalg
-from .math import sin, cos, tan, sqrt, sum
+from .math import sin, cos, tan, sqrt, sum, mean
 from .wrapper import Wrapper, wrap, array
 
 
