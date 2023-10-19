@@ -58,4 +58,4 @@ def mean(w: Wrapper, schedule_strategy=ScheduleStrategy.auto) -> Wrapper:
     if not isinstance(w, Wrapper):
         w = wrap(w)
 
-    return sum(w, schedule_strategy=ScheduleStrategy.auto) / np.prod(w.shape)
+    return sum(w, schedule_strategy=schedule_strategy) / np.prod(w.shape)

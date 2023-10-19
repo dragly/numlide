@@ -1,5 +1,6 @@
 import numlide as nl
 import numlide.linalg
+from numlide.schedule import ScheduleStrategy
 import numpy as np
 
 def test_linalg_norm():
