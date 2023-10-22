@@ -1,3 +1,8 @@
 [project]
 name = "numlide"
 version = "16.0.0"
+dependencies = ["numpy", "halide"]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
