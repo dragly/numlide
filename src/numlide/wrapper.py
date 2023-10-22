@@ -62,7 +62,8 @@ class Wrapper:
         variables = vars_from_shape(self.shape)
         if isinstance(other, Wrapper):
             other_variables = vars_from_shape(other.shape)
-            new_variables = variables + other_variables
+            shape = np.broadcast_shapes(self.shape, other.shape)
+            new_variables = vars_from_shape(shape)
             match operation:
                 case _Operation.add:
                     f[new_variables] = self.inner[variables] + other.inner[other_variables]
@@ -80,7 +81,6 @@ class Wrapper:
                     f[new_variables] = self.inner[variables] ** other.inner[other_variables]
                 case _:
                     raise RuntimeError(f"Operation not supported: {operation}")
-            shape = np.broadcast_shapes(self.shape, other.shape)
         else:
             match operation:
                 case _Operation.add:
