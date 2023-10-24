@@ -1,9 +1,10 @@
+from typing import Any, Optional, Tuple
 import halide as hl
 from collections.abc import Callable
 
 from .schedule import ScheduleStrategy
 from .wrapper import Wrapper, wrap
-from .utils import vars_from_shape, tr
+from .utils import var_from_index, vars_from_shape, tr
 import numpy as np
 
 
@@ -32,30 +33,97 @@ def sqrt(w: Wrapper) -> Wrapper:
     return apply(w, hl.sqrt)
 
 
-def sum(w: Wrapper, schedule_strategy=ScheduleStrategy.auto) -> Wrapper:
-    if not isinstance(w, Wrapper):
-        w = wrap(w)
+def _deduce_axis(
+    wrapper: Wrapper,
+    axis: Optional[int | Tuple[int]],
+) -> Tuple[int, ...]:
+    if axis is None:
+        return tuple(i for i in range(len(wrapper.shape)))
+    elif isinstance(axis, int):
+        return tuple((axis,))
+    return axis
 
-    f = hl.Func("sum")
-    f[()] = hl.cast(w.inner.type(), 0)
+
+def _reduce(
+    w: Wrapper,
+    impl: Callable[[Any, Any], hl.Func],
+    axis: Optional[int | Tuple[int]],
+    schedule_strategy=ScheduleStrategy.auto,
+):
+    axis = _deduce_axis(w, axis)
+
     rdom_elements = list()
-    for extent in w.shape:
-        rdom_elements.append((0, extent))
+    for i, extent in enumerate(w.shape):
+        if i in axis:
+            rdom_elements.append((0, extent))
 
+    shape = tuple()
+    next_rdom_element = 0
     rdom = hl.RDom(tr(rdom_elements))
-    rdom_accesors = []
-    for i in range(rdom.dimensions()):
-        rdom_accesors.append(rdom[i])
-    f[()] += w.inner[rdom_accesors]
+    right_variables = []
+    left_variables = []
+    for i in tr(range(len(w.shape))):
+        if i in axis:
+            right_variables.append(rdom[next_rdom_element])
+            next_rdom_element += 1
+        else:
+            var = var_from_index(i)
+            right_variables.append(var)
+            left_variables.append(var)
+            shape += (w.shape[i],)
+
+    shape = tr(shape)
+
+    f = impl(left_variables, right_variables)
 
     if schedule_strategy == ScheduleStrategy.auto:
         f.compute_root()
 
-    return Wrapper(inner=f, shape=tuple())
+    return Wrapper(inner=f, shape=shape)
 
 
-def mean(w: Wrapper, schedule_strategy=ScheduleStrategy.auto) -> Wrapper:
+def sum(w: Wrapper, axis: Optional[int | Tuple[int]] = None, schedule_strategy=ScheduleStrategy.auto) -> Wrapper:
     if not isinstance(w, Wrapper):
         w = wrap(w)
 
-    return sum(w, schedule_strategy=schedule_strategy) / np.prod(w.shape)
+    def impl(left_variables, right_variables) -> hl.Func:
+        f = hl.Func("sum")
+        f[left_variables] = hl.cast(w.inner.type(), 0)
+        f[left_variables] += w.inner[right_variables]
+        return f
+
+    return _reduce(w, impl=impl, axis=axis, schedule_strategy=schedule_strategy)
+
+
+def min(w: Wrapper, axis: Optional[int | Tuple[int]] = None, schedule_strategy=ScheduleStrategy.auto) -> Wrapper:
+    if not isinstance(w, Wrapper):
+        w = wrap(w)
+
+    def impl(left_variables, right_variables) -> hl.Func:
+        f = hl.Func("min")
+        f[left_variables] = hl.minimum(w.inner[right_variables])
+        return f
+
+    return _reduce(w, impl=impl, axis=axis, schedule_strategy=schedule_strategy)
+
+
+def max(w: Wrapper, axis: Optional[int | Tuple[int]] = None, schedule_strategy=ScheduleStrategy.auto) -> Wrapper:
+    if not isinstance(w, Wrapper):
+        w = wrap(w)
+
+    def impl(left_variables, right_variables) -> hl.Func:
+        f = hl.Func("max")
+        f[left_variables] = hl.maximum(w.inner[right_variables])
+        return f
+
+    return _reduce(w, impl=impl, axis=axis, schedule_strategy=schedule_strategy)
+
+
+def mean(w: Wrapper, axis: Optional[int | Tuple[int]] = None, schedule_strategy=ScheduleStrategy.auto) -> Wrapper:
+    if not isinstance(w, Wrapper):
+        w = wrap(w)
+
+    axis = _deduce_axis(w, axis)
+    summed_element_count = np.prod(np.array(w.shape)[list(axis)])
+
+    return sum(w, axis=axis, schedule_strategy=schedule_strategy) / summed_element_count

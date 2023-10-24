@@ -5,7 +5,8 @@ from typing import Any, Sequence, Tuple
 import halide as hl
 import numpy as np
 from dataclasses import dataclass
-from .utils import var_from_index, vars_from_shape, tr
+from .utils import calculate_extent, var_from_index, vars_from_shape, tr
+from itertools import zip_longest
 
 
 class _Operation(Enum):
@@ -16,22 +17,36 @@ class _Operation(Enum):
     floordiv = auto()
     mod = auto()
     pow_ = auto()
+    lt = auto()
+    gt = auto()
+    le = auto()
+    ge = auto()
+    eq = auto()
+    ne = auto()
 
 
 @dataclass
 class Wrapper:
     shape: Tuple[Any]
-    inner: hl.Func | hl.ImageParam
+    inner: hl.Func
 
     def __getitem__(self, args):
         left_variables = tuple()
         right_variables = tuple()
         shape = tuple()
-        for index, (arg, shaped) in enumerate(zip(args, self.shape)):
-            var = var_from_index(index)
-            if isinstance(arg, slice):
+        for arg in args:
+            left_index = len(left_variables)
+            right_index = len(right_variables)
+            var = var_from_index(left_index)
+            if arg is None:
                 left_variables += (var,)
+                shape += (1,)
+            elif isinstance(arg, int):
+                right_variables += (arg,)
+            elif isinstance(arg, slice):
                 step = 1 if arg.step is None else arg.step
+
+                shaped = self.shape[right_index]
 
                 if arg.start is None:
                     start = 0
@@ -47,18 +62,21 @@ class Wrapper:
                 else:
                     stop = arg.stop
 
-                extent = int(np.ceil(np.abs(stop - start) / np.max([np.abs(step), 1])))
+                extent = calculate_extent(start, stop, step)
                 halide_step = 0 if extent == 1 else step
+                left_variables += (var,)
                 right_variables += (halide_step * var + start,)
                 shape += (extent,)
+            else:
+                raise NotImplementedError(f"Argument not supported: `{arg}` is of type `{type(arg)}`")
         f = hl.Func("getitem")
-        f.__setitem__(tr(left_variables), self.inner.__getitem__(tr(right_variables)))
+        f[tr(left_variables)] = self.inner[tr(right_variables)]
         return Wrapper(inner=f, shape=shape)
 
     def _perform_operation(self, other, operation: _Operation) -> Wrapper:
-        if not isinstance(other, Wrapper) or isinstance(other, int) or isinstance(other, float):
+        if not (isinstance(other, Wrapper) or isinstance(other, int) or isinstance(other, float)):
             other = wrap(other)
-        f = hl.Func("add")
+        f = hl.Func(str(operation).split(".")[1])
         variables = vars_from_shape(self.shape)
         if isinstance(other, Wrapper):
             other_variables = vars_from_shape(other.shape)
@@ -79,6 +97,19 @@ class Wrapper:
                     f[new_variables] = self.inner[variables] % other.inner[other_variables]
                 case _Operation.pow_:
                     f[new_variables] = self.inner[variables] ** other.inner[other_variables]
+                case _Operation.lt:
+                    # TODO: Remove cast and ensure other functions, such as sum, do the casting
+                    f[new_variables] = hl.i32(self.inner[variables] < other.inner[other_variables])
+                case _Operation.gt:
+                    f[new_variables] = hl.i32(self.inner[variables] > other.inner[other_variables])
+                case _Operation.le:
+                    f[new_variables] = hl.i32(self.inner[variables] <= other.inner[other_variables])
+                case _Operation.ge:
+                    f[new_variables] = hl.i32(self.inner[variables] >= other.inner[other_variables])
+                case _Operation.eq:
+                    f[new_variables] = hl.i32(self.inner[variables] == other.inner[other_variables])
+                case _Operation.ne:
+                    f[new_variables] = hl.i32(self.inner[variables] != other.inner[other_variables])
                 case _:
                     raise RuntimeError(f"Operation not supported: {operation}")
         else:
@@ -97,6 +128,18 @@ class Wrapper:
                     f[variables] = self.inner[variables] % other
                 case _Operation.pow_:
                     f[variables] = self.inner[variables] ** other
+                case _Operation.lt:
+                    f[variables] = self.inner[variables] < other
+                case _Operation.gt:
+                    f[variables] = self.inner[variables] > other
+                case _Operation.le:
+                    f[variables] = self.inner[variables] <= other
+                case _Operation.ge:
+                    f[variables] = self.inner[variables] >= other
+                case _Operation.eq:
+                    f[variables] = self.inner[variables] == other
+                case _Operation.ne:
+                    f[variables] = self.inner[variables] != other
                 case _:
                     raise RuntimeError(f"Operation not supported: {operation}")
             shape = self.shape
@@ -144,6 +187,9 @@ class Wrapper:
     def __rpow__(self, other) -> Wrapper:
         return wrap(other) ** self
 
+    def __lt__(self, other) -> Wrapper:
+        return self._perform_operation(other, _Operation.lt)
+
     def realize(self):
         return self.inner.realize(tr(self.shape))
 
@@ -153,10 +199,17 @@ class Wrapper:
     def to_numpy(self):
         return np.asanyarray(self.realize())
 
+    def print_loop_nest(self):
+        self.inner.print_loop_nest()
+
 
 def array(values):
     np_array = np.array(values)
-    return Wrapper(inner=hl.Buffer(np_array).copy(), shape=np_array.shape)
+    buffer = hl.Buffer(np_array).copy()
+    inner = hl.Func("array")
+    variables = vars_from_shape(np_array.shape)
+    inner[variables] = buffer[variables]
+    return Wrapper(inner=inner, shape=np_array.shape)
 
 
 def wrap(values):

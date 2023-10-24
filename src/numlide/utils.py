@@ -21,3 +21,5 @@ def vars_from_shape(shape: Tuple[int]) -> Tuple[hl.Var]:
     return tr(variables)
 
 
+def calculate_extent(start, stop, step):
+    return int(np.ceil(np.abs(stop - start) / np.max([np.abs(step), 1])))
