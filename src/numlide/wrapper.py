@@ -190,6 +190,9 @@ class Wrapper:
     def __lt__(self, other) -> Wrapper:
         return self._perform_operation(other, _Operation.lt)
 
+    def __le__(self, other) -> Wrapper:
+        return self._perform_operation(other, _Operation.le)
+
     def realize(self):
         return self.inner.realize(tr(self.shape))
 
@@ -209,7 +212,9 @@ class Wrapper:
         return repr(np.asanyarray(self.realize()))
 
     def __len__(self):
-        return self.shape[0]
+        if len(self.shape) > 0:
+            return self.shape[0]
+        return 0
 
     def __contains__(self, v):
         return np.asanyarray(self.realize()).__contains__(v)
@@ -217,10 +222,30 @@ class Wrapper:
     def __iter__(self):
         return np.asanyarray(self.realize()).__iter__()
 
+    def __abs__(self) -> Wrapper:
+        vars = vars_from_shape(self.shape)
+        f = hl.Func(f"{self.inner.name()}_abs")
+        f[vars] = hl.abs(self.inner[vars])
+        return Wrapper(shape=self.shape, inner=f)
+
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
         if ufunc == np.add and method == '__call__' and len(inputs) == 2 and isinstance(inputs[0], np.ndarray) and isinstance(inputs[1], Wrapper):
             return inputs[1] + inputs[0]
+        if ufunc == np.less_equal and method == '__call__' and len(inputs) == 2 and isinstance(inputs[0], np.ndarray) and isinstance(inputs[1], Wrapper):
+            return wrap(inputs[0]) <= inputs[1]
 
+        return NotImplemented
+
+    def __array_function__(self, func, types, args, kwargs):
+        from . import math
+        if not all(issubclass(t, Wrapper) for t in types):
+            return NotImplemented
+        if func == np.mean:
+            return math.mean(*args, **kwargs)
+        if func == np.iscomplexobj:
+            return False
+        if func == np.abs:
+            return math.abs(*args, **kwargs)
         return NotImplemented
 
 
