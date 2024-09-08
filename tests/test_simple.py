@@ -1,6 +1,4 @@
 import numlide as nl
-import numlide.linalg
-from numlide.schedule import ScheduleStrategy
 import numpy as np
 
 
@@ -45,3 +43,8 @@ def test_math():
     compare(np.max, nl.max)
     compare(np.mean, nl.mean)
     compare(np.sum, nl.sum)
+
+def test_numpy():
+    a = np.array([1, 2, 3])
+    b = nl.array([1, 2, 3])
+    np.testing.assert_equal(a + b, np.array([2, 4, 6]))

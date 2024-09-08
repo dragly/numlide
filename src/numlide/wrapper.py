@@ -202,6 +202,27 @@ class Wrapper:
     def print_loop_nest(self):
         self.inner.print_loop_nest()
 
+    def __str__(self):
+        return str(np.asanyarray(self.realize()))
+
+    def __repr__(self):
+        return repr(np.asanyarray(self.realize()))
+
+    def __len__(self):
+        return self.shape[0]
+
+    def __contains__(self, v):
+        return np.asanyarray(self.realize()).__contains__(v)
+
+    def __iter__(self):
+        return np.asanyarray(self.realize()).__iter__()
+
+    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        if ufunc == np.add and method == '__call__' and len(inputs) == 2 and isinstance(inputs[0], np.ndarray) and isinstance(inputs[1], Wrapper):
+            return inputs[1] + inputs[0]
+
+        return NotImplemented
+
 
 def array(values):
     np_array = np.array(values)

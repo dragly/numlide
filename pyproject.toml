@@ -1,8 +1,24 @@
 [project]
 name = "numlide"
 version = "16.0.0"
-dependencies = ["numpy", "halide"]
+dependencies = ["numpy>=2", "halide==19.0.0.dev36"]
+requires-python = ">=3.10"
 
 [project.optional-dependencies]
 test = ["pytest"]
 
+[tool.uv]
+index-strategy = "unsafe-best-match"
+extra-index-url = ["https://pypi.org/simple", "https://test.pypi.org/simple"]
+dev-dependencies = [
+    "black>=24",
+    "mypy>=1.11",
+    "pytest>=8.3",
+    "pytest-benchmark>=4",
+    "jupyter",
+    "notebook",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
