@@ -126,10 +126,4 @@ def mean(w: Wrapper, axis: Optional[int | Tuple[int]] = None, schedule_strategy=
     axis = _deduce_axis(w, axis)
     summed_element_count = np.prod(np.array(w.shape)[list(axis)])
 
-    f_f64 = hl.Func(f"{w.inner.name()}_f64")
-    vars = vars_from_shape(w.shape)
-    f_f64[vars] = hl.cast(hl.Float(64), w.inner[vars])
-    w_f64 = Wrapper(inner=f_f64, shape=w.shape)
-
-    return sum(w_f64, axis=axis, schedule_strategy=schedule_strategy) / summed_element_count
-
+    return sum(w, axis=axis, schedule_strategy=schedule_strategy) / summed_element_count

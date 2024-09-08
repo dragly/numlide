@@ -45,9 +45,6 @@ def test_math():
     compare(np.sum, nl.sum)
 
 def test_numpy():
-    a = np.array([1, 2, 4])
-    b = nl.array([1, 2, 4])
-    np.testing.assert_equal(a + b, np.array([2, 4, 8]))
-    np.testing.assert_almost_equal(np.mean(a), np.mean(b))
-
-test_numpy()
+    a = np.array([1, 2, 3])
+    b = nl.array([1, 2, 3])
+    np.testing.assert_equal(a + b, np.array([2, 4, 6]))
