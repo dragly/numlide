@@ -11,10 +11,13 @@ def test_structured_light():
         minimum = m.min(images, axis=2)
         maximum = m.max(images, axis=2)
         threshold = (maximum + minimum) / 2
-        binary_code = images > threshold
-        decimal_code = binary_code * 2 ** np.arange(0, 10)
+        binary_code = images > threshold[:, :, np.newaxis]
+        print(binary_code.shape)
+        decimal_code = binary_code * (2 ** np.arange(0, 10))
+        print(decimal_code.shape)
+        return decimal_code
 
     result_np = structured_light(np, images)
-    print(result_np[500, 500])
+    result_nl = structured_light(nl, images)
 
-    # np.testing.assert_allclose(result_nl.to_numpy(), result_np)
+    np.testing.assert_allclose(result_nl.to_numpy(), result_np)

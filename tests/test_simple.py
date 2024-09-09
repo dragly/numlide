@@ -44,10 +44,43 @@ def test_math():
     compare(np.mean, nl.mean)
     compare(np.sum, nl.sum)
 
+
 def test_numpy():
     a = np.array([1, 2, 4])
     b = nl.array([1, 2, 4])
     np.testing.assert_equal(a + b, np.array([2, 4, 8]))
     np.testing.assert_almost_equal(np.mean(a), np.mean(b))
 
-test_numpy()
+
+def test_newaxis():
+    def add_axis(array):
+        return array[:, np.newaxis]
+
+    array = np.array([1, 2, 3])
+    result_np = add_axis(array)
+    result_nl = add_axis(nl.wrap(array))
+
+    np.testing.assert_equal(result_np, result_nl)
+
+
+def test_broadcast():
+    def multiply(array):
+        return array * np.arange(0, 4)
+
+    array = np.array(
+        [
+            [
+                [1, 2, 3, 4],
+                [5, 6, 7, 8],
+            ],
+            [
+                [2, 3, 4, 5],
+                [6, 7, 8, 9],
+            ],
+        ]
+    )
+
+    np.testing.assert_equal(
+        multiply(array),
+        multiply(nl.array(array)),
+    )
