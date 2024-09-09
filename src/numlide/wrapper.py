@@ -79,9 +79,15 @@ class Wrapper:
         f = hl.Func(str(operation).split(".")[1])
         variables = vars_from_shape(self.shape)
         if isinstance(other, Wrapper):
-            other_variables = vars_from_shape(other.shape)
-            shape = np.broadcast_shapes(self.shape, other.shape)
-            new_variables = vars_from_shape(shape)
+            broadcast_shape = np.broadcast_shapes(self.shape, other.shape)
+            new_variables = vars_from_shape(broadcast_shape)
+            if len(other.shape) == 1 and len(broadcast_shape) > 1:
+                # custom broadcasting case where the last dimension
+                # will be applied against the other
+                other_variables = [new_variables[0]]
+            else:
+                other_variables = vars_from_shape(other.shape)
+
             match operation:
                 case _Operation.add:
                     f[new_variables] = self.inner[variables] + other.inner[other_variables]
@@ -142,8 +148,8 @@ class Wrapper:
                     f[variables] = self.inner[variables] != other
                 case _:
                     raise RuntimeError(f"Operation not supported: {operation}")
-            shape = self.shape
-        return Wrapper(inner=f, shape=shape)
+            broadcast_shape = self.shape
+        return Wrapper(inner=f, shape=broadcast_shape)
 
     def __add__(self, other) -> Wrapper:
         return self._perform_operation(other, _Operation.add)
@@ -229,15 +235,36 @@ class Wrapper:
         return Wrapper(shape=self.shape, inner=f)
 
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
-        if ufunc == np.add and method == '__call__' and len(inputs) == 2 and isinstance(inputs[0], np.ndarray) and isinstance(inputs[1], Wrapper):
+        if (
+            ufunc == np.add
+            and method == "__call__"
+            and len(inputs) == 2
+            and isinstance(inputs[0], np.ndarray)
+            and isinstance(inputs[1], Wrapper)
+        ):
             return inputs[1] + inputs[0]
-        if ufunc == np.less_equal and method == '__call__' and len(inputs) == 2 and isinstance(inputs[0], np.ndarray) and isinstance(inputs[1], Wrapper):
+        if (
+            ufunc == np.less_equal
+            and method == "__call__"
+            and len(inputs) == 2
+            and isinstance(inputs[0], np.ndarray)
+            and isinstance(inputs[1], Wrapper)
+        ):
             return wrap(inputs[0]) <= inputs[1]
+        if (
+            ufunc == np.greater
+            and method == "__call__"
+            and len(inputs) == 2
+            and isinstance(inputs[0], np.ndarray)
+            and isinstance(inputs[1], Wrapper)
+        ):
+            return wrap(inputs[0]) > inputs[1]
 
         return NotImplemented
 
     def __array_function__(self, func, types, args, kwargs):
         from . import math
+
         if not all(issubclass(t, Wrapper) for t in types):
             return NotImplemented
         if func == np.mean:
