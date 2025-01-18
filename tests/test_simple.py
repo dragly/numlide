@@ -27,23 +27,26 @@ def test_math():
     np.random.seed(42)
     image = np.random.randn(640, 480)
 
-    def compare(np_method, nl_method):
+    def compare(np_method, nl_method, per_axis: bool = True):
         result_np = np_method(image)
         result_nl = nl_method(image)
 
         np.testing.assert_allclose(result_nl.to_numpy(), result_np)
 
-        for axis in [0, 1]:
-            result_np = np_method(image, axis=axis)
-            result_nl = nl_method(image, axis=axis)
+        if per_axis:
+            for axis in [0, 1]:
+                result_np = np_method(image, axis=axis)
+                result_nl = nl_method(image, axis=axis)
 
-            np.testing.assert_allclose(result_nl.to_numpy(), result_np)
+                np.testing.assert_allclose(result_nl.to_numpy(), result_np)
 
     compare(np.min, nl.min)
     compare(np.max, nl.max)
     compare(np.mean, nl.mean)
     compare(np.sum, nl.sum)
     compare(np.var, nl.var)
+    compare(np.sqrt, nl.sqrt, per_axis=False)
+
 
 
 def test_numpy():

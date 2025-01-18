@@ -235,6 +235,7 @@ class Wrapper:
         return Wrapper(shape=self.shape, inner=f)
 
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        from . import math
         if (
             method == "__call__"
             and len(inputs) == 2
@@ -249,6 +250,13 @@ class Wrapper:
                 return wrap(inputs[0]) > inputs[1]
             if ufunc == np.multiply:
                 return wrap(inputs[0]) * inputs[1]
+        if (
+            method == "__call__"
+            and len(inputs) == 1
+            and isinstance(inputs[0], Wrapper)
+        ):
+            if ufunc == np.sqrt:
+                return math.sqrt(inputs[0])
 
         return NotImplemented
 
@@ -267,6 +275,8 @@ class Wrapper:
             return False
         if func == np.abs:
             return math.abs(*args, **kwargs)
+        if func == np.sqrt:
+            return math.sqrt(*args, **kwargs)
         if func == np.sum:
             return math.sum(*args, **kwargs)
         if func == np.var:
