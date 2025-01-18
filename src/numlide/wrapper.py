@@ -13,6 +13,7 @@ class _Operation(Enum):
     add = auto()
     sub = auto()
     mul = auto()
+    matmul = auto()
     truediv = auto()
     floordiv = auto()
     mod = auto()
@@ -168,6 +169,17 @@ class Wrapper:
 
     def __rmul__(self, other) -> Wrapper:
         return self * other
+
+    def __matmul__(self, other) -> Wrapper:
+        if not (isinstance(other, Wrapper)):
+            other = wrap(other)
+        f = hl.Func("matmul")
+        variables = vars_from_shape(self.shape)
+        r = hl.RDom([(0, self.shape[-1])])
+        f[variables] = hl.cast(self.inner.type(), 0)
+        f[variables] += self.inner[(r,) + variables[1:]] * other.inner[tuple(variables[:-1]) + (r,)]
+        new_shape = self.shape[:-1] + other.shape[1:]
+        return Wrapper(inner=f, shape=new_shape)
 
     def __truediv__(self, other) -> Wrapper:
         return self._perform_operation(other, _Operation.truediv)
