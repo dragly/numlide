@@ -1,7 +1,11 @@
 [project]
 name = "numlide"
 version = "16.0.0"
-dependencies = ["numpy>=2", "halide==19.0.0.dev36"]
+dependencies = [
+    "numpy>=2",
+ "halide>=19",
+ "black>=24.8.0",
+]
 requires-python = ">=3.10"
 
 [project.optional-dependencies]

@@ -293,7 +293,7 @@ name = "click"
 version = "8.1.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "platform_system == 'Windows'" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/96/d3/f04c7bfcf5c1862a2a5b845c6b2b360488cf47af55dfa79c98f6a6bf98b5/click-8.1.7.tar.gz", hash = "sha256:ca9853ad459e787e2192211578cc907e7594e294c7ccc834310722b41b9ca6de", size = 336121 }
 wheels = [
@@ -407,29 +407,29 @@ wheels = [
 
 [[package]]
 name = "halide"
-version = "19.0.0.dev36"
-source = { registry = "https://test.pypi.org/simple" }
+version = "19.0.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "imageio" },
     { name = "numpy" },
 ]
 wheels = [
-    { url = "https://test-files.pythonhosted.org/packages/40/1d/ec0090160fef9296ffbe4f51ce08438e4731a74dd41e55686b1cadf511db/halide-19.0.0.dev36-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:26a393c18659969d66c18e2ea8925c5acda01cfdae5ae63e0d2a196340d67cf9", size = 51830521 },
-    { url = "https://test-files.pythonhosted.org/packages/79/ec/459e5aa712ef8efd90b0568b95b3154be100fa0325422302d6f2898c89eb/halide-19.0.0.dev36-cp310-cp310-macosx_11_0_x86_64.whl", hash = "sha256:457871cb17ef6fab59fcec3aaddf30f36ce8b072d5935dbf991c11afdfe0ba1a", size = 55556150 },
-    { url = "https://test-files.pythonhosted.org/packages/34/22/e4ccc9acafebfd2e0d7e30d274b4b0aa9e719e00b9bd3796e8bb00654601/halide-19.0.0.dev36-cp310-cp310-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:93030e9206595eec85464c6feb53d28105a5c5afba966d988fee0734576d88d5", size = 61965163 },
-    { url = "https://test-files.pythonhosted.org/packages/b2/e1/52ea4c9d251c122c163070dc560f28e19b34bdca9632ef52ac30bc45ff56/halide-19.0.0.dev36-cp310-cp310-win_amd64.whl", hash = "sha256:ce5778af1919d2c298f21f68e3bda1d01bf3ae32d36e8387d772013a5f0b010c", size = 53553100 },
-    { url = "https://test-files.pythonhosted.org/packages/64/25/0d7a3fb4a538ea72eddd4a41b9da47d3b180a691af52e9e0afd7a998e69b/halide-19.0.0.dev36-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:6d1a90122ac4684c2243ee235d94617250977d98bc2579441e70f7b32204ae76", size = 51830526 },
-    { url = "https://test-files.pythonhosted.org/packages/3e/80/55e9d58210ee745a8e49c8ed33bbafbed57c66d946406b393ae36dcf9267/halide-19.0.0.dev36-cp311-cp311-macosx_11_0_x86_64.whl", hash = "sha256:f1e505b86aba6925f95a9899866498da48871e71ffa121a4ca1f8dbf64b2b6bf", size = 55556229 },
-    { url = "https://test-files.pythonhosted.org/packages/fc/75/780c5b24aa99d0af531d51efe25b3320392bf57aed7f28f82017a2a3d686/halide-19.0.0.dev36-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:18fa36b93135de7c24efecf382d9a3dafb348246d5d5ec0cfe923a728c0835c2", size = 61965616 },
-    { url = "https://test-files.pythonhosted.org/packages/86/cb/fd468a71659205a35d50033fc2ad7ed6b2d0ea2bb387acc0a850807e5d62/halide-19.0.0.dev36-cp311-cp311-win_amd64.whl", hash = "sha256:0480ed5be26cf3a1e290c8f8462f38f80231f5993ff33e341c74c843464daced", size = 53553335 },
-    { url = "https://test-files.pythonhosted.org/packages/51/69/bda75406cf897b052dab538b6c5a834e11cbabd29abc295f8bc9351057f4/halide-19.0.0.dev36-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:649cde1bb37aa6a9f4c4897146f16b21afb58f55dc56e1c0058bad54ffdb1735", size = 51840794 },
-    { url = "https://test-files.pythonhosted.org/packages/de/a6/3db3bed9a888671056e8eb45967ccd9bcc0aae5b37dc8375148770e62b7e/halide-19.0.0.dev36-cp312-cp312-macosx_11_0_x86_64.whl", hash = "sha256:c28259fe1c5d86d1ef571688251b0e9668bd628ca473ed73a7ce4d580f639000", size = 55573811 },
-    { url = "https://test-files.pythonhosted.org/packages/3c/34/4e147e36620658c52c1f9c03fb359f213d5037e708d664eeab8343852414/halide-19.0.0.dev36-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:f6dffb24be61075c82c18324d5d742ccdc2602b53e2260cfa3a5c917a6257b1c", size = 61984411 },
-    { url = "https://test-files.pythonhosted.org/packages/03/5b/c527be5efcf113458203ca4a7a8e2cfd27b1125d492c1cf4260b2e0086b6/halide-19.0.0.dev36-cp312-cp312-win_amd64.whl", hash = "sha256:ea928664822f46f07ef4ada2174eb4cc00e2d690f164ba0fb954b57d97ecfedd", size = 53560385 },
-    { url = "https://test-files.pythonhosted.org/packages/17/71/8b99b07abbb8390c260fe07ffb2ab7c47bccf95d1fa3224c97ce15c5f789/halide-19.0.0.dev36-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:f8ec7f87c9ffb50509809e363b4b0532bdb502ca742c0db19b26adeb6f5b2742", size = 51840810 },
-    { url = "https://test-files.pythonhosted.org/packages/2f/59/ca4fadcca2f9d92595667f3caf2e1d90e762ebcef426c5d26b939dbf9e6e/halide-19.0.0.dev36-cp313-cp313-macosx_11_0_x86_64.whl", hash = "sha256:bf0d383cfeadd85749a9da5b64f1886b47730588bf0f38b60e95c95de98c7305", size = 55573832 },
-    { url = "https://test-files.pythonhosted.org/packages/cb/eb/4739a2234d99a81e56ae0cd4d359213aeab7d9661ecfd9cdd29e2cf51be2/halide-19.0.0.dev36-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:f0e8639cc6404e75c0485638df634f2159672e2e8246f46f5a55daf8aff015a5", size = 61984438 },
-    { url = "https://test-files.pythonhosted.org/packages/1b/f2/d8250a73da4d417d11f940f48d051bfe7ac8b380e640f671a99a44c4e490/halide-19.0.0.dev36-cp313-cp313-win_amd64.whl", hash = "sha256:d2baddeb0a7af73fef88c35eccc3b7e0bf7f4beb0d54a97b618554462c978f74", size = 53560310 },
+    { url = "https://files.pythonhosted.org/packages/32/67/0457034467233f19cb2019bfdfe718cab9d2bf254c03f68e2b9c49a0ff21/halide-19.0.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:14dbb06b23ffd46e1b386ddf4e488b704a1cfc029f3c5e94c23ce7fbaab5f780", size = 52727907 },
+    { url = "https://files.pythonhosted.org/packages/60/24/5c6f49b06e9bc072e9d0752315e581cdc8f737a0ae27c1c1f798dbbc420e/halide-19.0.0-cp310-cp310-macosx_11_0_x86_64.whl", hash = "sha256:58a3461ad20212ef69184b5bc2a705947b154657f52607875281ff1389349467", size = 56584076 },
+    { url = "https://files.pythonhosted.org/packages/e0/2b/284e22dd16ef3dcf5ee686f9e466fc4ead5dfe097fbe425dfa5c3db2a861/halide-19.0.0-cp310-cp310-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:7cfcc3609f277f34ac917abd90780de4781d75f235566bf7e23cd71a9b35d7b4", size = 63660670 },
+    { url = "https://files.pythonhosted.org/packages/2f/78/980b8e97bfcdaa5f418b509d53e6ff87d2f726a6da0f87c7712514bbee18/halide-19.0.0-cp310-cp310-win_amd64.whl", hash = "sha256:96002bba30527782c4ba6a0c9852c1952590bcc35e3db8194e0fd8bcf4110745", size = 54334517 },
+    { url = "https://files.pythonhosted.org/packages/b6/39/e6845fc5c05159e09f58c794e358bbe94c4ba52ed57640e14aa9e6678def/halide-19.0.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:8acd194c15864094e44422a8cb68d310309ce097fbcbe2ba48bd9526055679e8", size = 52727875 },
+    { url = "https://files.pythonhosted.org/packages/26/06/fa45458d0cf182c51968656bac4392188c8be28e6ee15729d5489e4e63b8/halide-19.0.0-cp311-cp311-macosx_11_0_x86_64.whl", hash = "sha256:1d569794d503d1a078988a53b317cff8742634b5a4721bace4b59d63790325e0", size = 56584072 },
+    { url = "https://files.pythonhosted.org/packages/9e/48/4edd9e833f32872e8ffdb6393ce426113c9c6f8c6b5f7076f90f4ed89742/halide-19.0.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:13440eef365d5570b0206d8efc054de0e6ed204ae6c04490a687c367d4918553", size = 63660382 },
+    { url = "https://files.pythonhosted.org/packages/1c/d9/d75e56818bca4d371103db7edcbd5e23e562221178e861eb142f08df37f0/halide-19.0.0-cp311-cp311-win_amd64.whl", hash = "sha256:5d73e18a5843184589736d81149f6183bd7b6351027afc3abfdd1cdc242dd06c", size = 54334349 },
+    { url = "https://files.pythonhosted.org/packages/98/cc/447c68930550414e2473f3dc930222d15f5a107288957f0befe4be54a4ca/halide-19.0.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:94e0614407a8f9936607bd03df4ccca70eac01a3e97d53c2ca78d9f91e4eaedc", size = 52738203 },
+    { url = "https://files.pythonhosted.org/packages/fe/42/21c3b313861bc35e43c4ff47159bbf38b6ff511bcda5a7fde060e7ef0aa0/halide-19.0.0-cp312-cp312-macosx_11_0_x86_64.whl", hash = "sha256:ef7945b0db7721d086866d5242897fb786459f5b0ebeea5cc953dc4a2e1ac5d2", size = 56601519 },
+    { url = "https://files.pythonhosted.org/packages/a5/89/93cd27cce78e59b414b762d0d139090f51baa72f443cf754d0ba0d83b2d4/halide-19.0.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:2b0a283d9653dac81ea8ebdefe46f88461a2bae894b7ea83baa112740a132466", size = 63680586 },
+    { url = "https://files.pythonhosted.org/packages/09/62/1f7f02115c48b9528efeff12ea99e9efa50b11a5cb9c726c263fe7a76c51/halide-19.0.0-cp312-cp312-win_amd64.whl", hash = "sha256:ef8e3ee154885515c36d959e17382f00a3b99234d09ee1adde2993b0d114fa28", size = 54341168 },
+    { url = "https://files.pythonhosted.org/packages/4c/8d/5bb4ab8e79d7bb234161c2f481da378baad8e7a021201aa0171de2842aef/halide-19.0.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:5463e43237c30bebca7b0e72cbdab6ce83f13b1c6317dbc27d8ae600011efd5a", size = 52738170 },
+    { url = "https://files.pythonhosted.org/packages/2b/c2/dba7cb190e4d7bc076164f99105de1b7e3ce6e5bf2606e0ddf23878e3300/halide-19.0.0-cp313-cp313-macosx_11_0_x86_64.whl", hash = "sha256:60ee053bec8620b2fa2f64d0f8e08645415c7e1303f292716a6ffe2de3001d0a", size = 56601656 },
+    { url = "https://files.pythonhosted.org/packages/b0/47/7fc28af72ad8bcbd5055c5dae18583a08d3a3080cd8ef823cfebbb875014/halide-19.0.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:484764fd45216d71dd1b97672bf2163fd8b5fb94d2e0382870c9d13962ec7760", size = 63680577 },
+    { url = "https://files.pythonhosted.org/packages/b8/6c/b95546dbe5187d6109e4473f2135ca7b16cb48e6eb510d7a0a23a963d7a2/halide-19.0.0-cp313-cp313-win_amd64.whl", hash = "sha256:fe296868935a28013698bd23f4c508744a2ef7a0645bbb47de58e3198ac2bcb1", size = 54341408 },
 ]
 
 [[package]]
@@ -497,7 +497,7 @@ name = "ipykernel"
 version = "6.29.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "appnope", marker = "platform_system == 'Darwin'" },
+    { name = "appnope", marker = "sys_platform == 'darwin'" },
     { name = "comm" },
     { name = "debugpy" },
     { name = "ipython" },
@@ -1042,6 +1042,7 @@ name = "numlide"
 version = "16.0.0"
 source = { editable = "." }
 dependencies = [
+    { name = "black" },
     { name = "halide" },
     { name = "numpy" },
 ]
@@ -1063,7 +1064,8 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "halide", specifier = "==19.0.0.dev36" },
+    { name = "black", specifier = ">=24.8.0" },
+    { name = "halide", specifier = ">=19" },
     { name = "numpy", specifier = ">=2" },
     { name = "pytest", marker = "extra == 'test'" },
 ]
@@ -1299,8 +1301,6 @@ version = "6.0.0"
 source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/18/c7/8c6872f7372eb6a6b2e4708b88419fb46b857f7a2e1892966b851cc79fc9/psutil-6.0.0.tar.gz", hash = "sha256:8faae4f310b6d969fa26ca0545338b21f73c6b15db7c4a8d934a5482faa818f2", size = 508067 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c5/66/78c9c3020f573c58101dc43a44f6855d01bbbd747e24da2f0c4491200ea3/psutil-6.0.0-cp27-none-win32.whl", hash = "sha256:02b69001f44cc73c1c5279d02b30a817e339ceb258ad75997325e0e6169d8b35", size = 249766 },
-    { url = "https://files.pythonhosted.org/packages/e1/3f/2403aa9558bea4d3854b0e5e567bc3dd8e9fbc1fc4453c0aa9aafeb75467/psutil-6.0.0-cp27-none-win_amd64.whl", hash = "sha256:21f1fb635deccd510f69f485b87433460a603919b45e2a324ad65b0cc74f8fb1", size = 253024 },
     { url = "https://files.pythonhosted.org/packages/0b/37/f8da2fbd29690b3557cca414c1949f92162981920699cd62095a984983bf/psutil-6.0.0-cp36-abi3-macosx_10_9_x86_64.whl", hash = "sha256:c588a7e9b1173b6e866756dde596fd4cad94f9399daf99ad8c3258b3cb2b47a0", size = 250961 },
     { url = "https://files.pythonhosted.org/packages/35/56/72f86175e81c656a01c4401cd3b1c923f891b31fbcebe98985894176d7c9/psutil-6.0.0-cp36-abi3-manylinux_2_12_i686.manylinux2010_i686.manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:6ed2440ada7ef7d0d608f20ad89a04ec47d2d3ab7190896cd62ca5fc4fe08bf0", size = 287478 },
     { url = "https://files.pythonhosted.org/packages/19/74/f59e7e0d392bc1070e9a70e2f9190d652487ac115bb16e2eff6b22ad1d24/psutil-6.0.0-cp36-abi3-manylinux_2_12_x86_64.manylinux2010_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5fd9a97c8e94059b0ef54a7d4baf13b405011176c3b6ff257c247cae0d560ecd", size = 290455 },

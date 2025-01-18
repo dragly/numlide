@@ -14,10 +14,13 @@ def tr(values: Sequence[hl.Var | hl.Expr]) -> Tuple[hl.Var | hl.Expr]:
     return tuple(reversed(values))
 
 
-def vars_from_shape(shape: Tuple[int]) -> Tuple[hl.Var]:
+def vars_from_shape(shape: Tuple[int], zero_if_one: bool = False) -> Tuple[hl.Var]:
     variables = tuple()
     for i in range(len(shape)):
-        variables += (var_from_index(i),)
+        if zero_if_one and shape[i] == 1:
+            variables += (0,)
+        else:
+            variables += (var_from_index(i),)
     return tr(variables)
 
 

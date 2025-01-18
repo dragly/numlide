@@ -133,3 +133,12 @@ def mean(w: Wrapper, axis: Optional[int | Tuple[int]] = None, schedule_strategy=
 
     return sum(w_f64, axis=axis, schedule_strategy=schedule_strategy) / summed_element_count
 
+def abs(w: Wrapper, axis: Optional[int | Tuple[int]] = None, schedule_strategy=ScheduleStrategy.auto) -> Wrapper:
+    if not isinstance(w, Wrapper):
+        w = wrap(w)
+
+    f = hl.Func("abs")
+    vars = vars_from_shape(w.shape)
+    f[vars] = hl.abs(w.inner[vars])
+
+    return Wrapper(shape=w.shape, inner=f)
