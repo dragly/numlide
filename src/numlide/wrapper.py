@@ -77,7 +77,7 @@ class Wrapper:
         if not (isinstance(other, Wrapper) or isinstance(other, int) or isinstance(other, float)):
             other = wrap(other)
         f = hl.Func(str(operation).split(".")[1])
-        variables = vars_from_shape(self.shape)
+        variables = vars_from_shape(self.shape, zero_if_one=True)
         if isinstance(other, Wrapper):
             broadcast_shape = np.broadcast_shapes(self.shape, other.shape)
             new_variables = vars_from_shape(broadcast_shape)
@@ -86,7 +86,7 @@ class Wrapper:
                 # will be applied against the other
                 other_variables = [new_variables[0]]
             else:
-                other_variables = vars_from_shape(other.shape)
+                other_variables = vars_from_shape(other.shape, zero_if_one=True)
 
             match operation:
                 case _Operation.add:
@@ -236,29 +236,19 @@ class Wrapper:
 
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
         if (
-            ufunc == np.add
-            and method == "__call__"
+            method == "__call__"
             and len(inputs) == 2
             and isinstance(inputs[0], np.ndarray)
             and isinstance(inputs[1], Wrapper)
         ):
-            return inputs[1] + inputs[0]
-        if (
-            ufunc == np.less_equal
-            and method == "__call__"
-            and len(inputs) == 2
-            and isinstance(inputs[0], np.ndarray)
-            and isinstance(inputs[1], Wrapper)
-        ):
-            return wrap(inputs[0]) <= inputs[1]
-        if (
-            ufunc == np.greater
-            and method == "__call__"
-            and len(inputs) == 2
-            and isinstance(inputs[0], np.ndarray)
-            and isinstance(inputs[1], Wrapper)
-        ):
-            return wrap(inputs[0]) > inputs[1]
+            if ufunc == np.add:
+                return inputs[1] + inputs[0]
+            if ufunc == np.less_equal:
+                return wrap(inputs[0]) <= inputs[1]
+            if ufunc == np.greater:
+                return wrap(inputs[0]) > inputs[1]
+            if ufunc == np.multiply:
+                return wrap(inputs[0]) * inputs[1]
 
         return NotImplemented
 
@@ -269,10 +259,16 @@ class Wrapper:
             return NotImplemented
         if func == np.mean:
             return math.mean(*args, **kwargs)
+        if func == np.min:
+            return math.min(*args, **kwargs)
+        if func == np.max:
+            return math.max(*args, **kwargs)
         if func == np.iscomplexobj:
             return False
         if func == np.abs:
             return math.abs(*args, **kwargs)
+        if func == np.sum:
+            return math.sum(*args, **kwargs)
         return NotImplemented
 
 
