@@ -43,6 +43,7 @@ def test_math():
     compare(np.max, nl.max)
     compare(np.mean, nl.mean)
     compare(np.sum, nl.sum)
+    compare(np.var, nl.var)
 
 
 def test_numpy():

@@ -35,7 +35,7 @@ def sqrt(w: Wrapper) -> Wrapper:
 
 def _deduce_axis(
     wrapper: Wrapper,
-    axis: Optional[int | Tuple[int]],
+    axis: Optional[int | Tuple[int, ...]],
 ) -> Tuple[int, ...]:
     if axis is None:
         return tuple(i for i in range(len(wrapper.shape)))
@@ -47,14 +47,15 @@ def _deduce_axis(
 def _reduce(
     w: Wrapper,
     impl: Callable[[Any, Any], hl.Func],
-    axis: Optional[int | Tuple[int]],
+    axis: Optional[int | Tuple[int, ...]],
+    keepdims: bool,
     schedule_strategy=ScheduleStrategy.auto,
 ):
-    axis = _deduce_axis(w, axis)
+    deduced_axis = _deduce_axis(w, axis)
 
     rdom_elements = list()
     for i, extent in enumerate(w.shape):
-        if i in axis:
+        if i in deduced_axis:
             rdom_elements.append((0, extent))
 
     shape = tuple()
@@ -63,11 +64,14 @@ def _reduce(
     right_variables = []
     left_variables = []
     for i in tr(range(len(w.shape))):
-        if i in axis:
+        var = var_from_index(i)
+        if i in deduced_axis:
             right_variables.append(rdom[next_rdom_element])
             next_rdom_element += 1
+            if keepdims:
+                left_variables.append(var)
+                shape += (1,)
         else:
-            var = var_from_index(i)
             right_variables.append(var)
             left_variables.append(var)
             shape += (w.shape[i],)
@@ -82,7 +86,7 @@ def _reduce(
     return Wrapper(inner=f, shape=shape)
 
 
-def sum(w: Wrapper, axis: Optional[int | Tuple[int]] = None, schedule_strategy=ScheduleStrategy.auto) -> Wrapper:
+def sum(w: Wrapper, keepdims: bool = False, axis: Optional[int | Tuple[int, ...]] = None, schedule_strategy=ScheduleStrategy.auto) -> Wrapper:
     if not isinstance(w, Wrapper):
         w = wrap(w)
 
@@ -92,10 +96,10 @@ def sum(w: Wrapper, axis: Optional[int | Tuple[int]] = None, schedule_strategy=S
         f[left_variables] += w.inner[right_variables]
         return f
 
-    return _reduce(w, impl=impl, axis=axis, schedule_strategy=schedule_strategy)
+    return _reduce(w, impl=impl, axis=axis, keepdims=keepdims, schedule_strategy=schedule_strategy)
 
 
-def min(w: Wrapper, axis: Optional[int | Tuple[int]] = None, schedule_strategy=ScheduleStrategy.auto) -> Wrapper:
+def min(w: Wrapper, keepdims: bool = False, axis: Optional[int | Tuple[int]] = None, schedule_strategy=ScheduleStrategy.auto) -> Wrapper:
     if not isinstance(w, Wrapper):
         w = wrap(w)
 
@@ -104,10 +108,10 @@ def min(w: Wrapper, axis: Optional[int | Tuple[int]] = None, schedule_strategy=S
         f[left_variables] = hl.minimum(w.inner[right_variables])
         return f
 
-    return _reduce(w, impl=impl, axis=axis, schedule_strategy=schedule_strategy)
+    return _reduce(w, impl=impl,keepdims=keepdims, axis=axis, schedule_strategy=schedule_strategy)
 
 
-def max(w: Wrapper, axis: Optional[int | Tuple[int]] = None, schedule_strategy=ScheduleStrategy.auto) -> Wrapper:
+def max(w: Wrapper, keepdims: bool=False, axis: Optional[int | Tuple[int]] = None, schedule_strategy=ScheduleStrategy.auto) -> Wrapper:
     if not isinstance(w, Wrapper):
         w = wrap(w)
 
@@ -116,24 +120,36 @@ def max(w: Wrapper, axis: Optional[int | Tuple[int]] = None, schedule_strategy=S
         f[left_variables] = hl.maximum(w.inner[right_variables])
         return f
 
-    return _reduce(w, impl=impl, axis=axis, schedule_strategy=schedule_strategy)
+    return _reduce(w, impl=impl, axis=axis, keepdims=keepdims, schedule_strategy=schedule_strategy)
 
 
-def mean(w: Wrapper, axis: Optional[int | Tuple[int]] = None, schedule_strategy=ScheduleStrategy.auto) -> Wrapper:
+def mean(w: Wrapper, axis: Optional[int | Tuple[int, ...]] = None, schedule_strategy=ScheduleStrategy.auto, keepdims: bool = False) -> Wrapper:
     if not isinstance(w, Wrapper):
         w = wrap(w)
 
-    axis = _deduce_axis(w, axis)
-    summed_element_count = np.prod(np.array(w.shape)[list(axis)])
+    deduced_axis = _deduce_axis(w, axis)
+    summed_element_count = np.prod(np.array(w.shape)[list(deduced_axis)])
 
     f_f64 = hl.Func(f"{w.inner.name()}_f64")
     vars = vars_from_shape(w.shape)
     f_f64[vars] = hl.cast(hl.Float(64), w.inner[vars])
     w_f64 = Wrapper(inner=f_f64, shape=w.shape)
 
-    return sum(w_f64, axis=axis, schedule_strategy=schedule_strategy) / summed_element_count
+    return sum(w_f64, axis=deduced_axis, schedule_strategy=schedule_strategy, keepdims=keepdims) / summed_element_count
 
-def abs(w: Wrapper, axis: Optional[int | Tuple[int]] = None, schedule_strategy=ScheduleStrategy.auto) -> Wrapper:
+def var(w: Wrapper, axis: Optional[int | Tuple[int]] = None, schedule_strategy=ScheduleStrategy.auto, keepdims: bool = False) -> Wrapper:
+    if not isinstance(w, Wrapper):
+        w = wrap(w)
+
+    deduced_axis = _deduce_axis(w, axis)
+    summed_element_count = np.prod(np.array(w.shape)[list(deduced_axis)])
+
+    mean_value = mean(w, axis=axis, schedule_strategy=schedule_strategy, keepdims=True)
+    squared = (w - mean_value)**2
+
+    return sum(squared, axis=deduced_axis, keepdims=keepdims) / summed_element_count
+
+def abs(w: Wrapper) -> Wrapper:
     if not isinstance(w, Wrapper):
         w = wrap(w)
 

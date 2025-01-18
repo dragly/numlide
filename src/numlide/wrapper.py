@@ -269,6 +269,8 @@ class Wrapper:
             return math.abs(*args, **kwargs)
         if func == np.sum:
             return math.sum(*args, **kwargs)
+        if func == np.var:
+            return math.var(*args, **kwargs)
         return NotImplemented
 
 
