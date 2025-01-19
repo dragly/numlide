@@ -1,7 +1,7 @@
 from __future__ import annotations
 from collections.abc import Callable
 from enum import Enum, auto
-from typing import Any, Sequence, Tuple
+from typing import Any, Optional, Sequence, Tuple
 import halide as hl
 import numpy as np
 from dataclasses import dataclass
@@ -324,6 +324,23 @@ class Wrapper:
         if func == np.swapaxes:
             return manipulation.swapaxes(*args, **kwargs)
         return NotImplemented
+
+    @property
+    def ndim(self):
+        return len(self.shape)
+
+    def transpose(self, axes: Optional[list[int] | tuple[int]] = None):
+        axes = axes if axes else list(range(self.ndim)[::-1])
+        vars = list(vars_from_shape(self.shape))
+        vars_t = (vars[ax] for ax in axes)
+        shape_t = tuple(self.shape[ax] for ax in axes)
+        f = hl.Func(f"{self.inner.name()}_transpose")
+        f[vars] = self.inner.__getitem__(list(vars_t))
+        return Wrapper(shape=shape_t, inner=f)
+
+    @property
+    def T(self):
+        return self.transpose()
 
 
 def array(values):
