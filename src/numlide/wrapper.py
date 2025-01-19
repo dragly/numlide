@@ -35,6 +35,12 @@ class Wrapper:
         left_variables = tuple()
         right_variables = tuple()
         shape = tuple()
+
+        try:
+            len(args)
+        except:
+            args = [args]
+
         for arg in args:
             left_index = len(left_variables)
             right_index = len(right_variables)
