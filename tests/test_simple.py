@@ -47,7 +47,17 @@ def test_math():
     compare(np.var, nl.var)
     compare(np.sqrt, nl.sqrt, per_axis=False)
 
-
+def test_matmul():
+    a = np.array([
+        [1, 2, 3],
+        [4, 5, 6]
+        ])
+    b = np.array([
+        [1, 2],
+        [4, 5],
+        [7, 8],
+    ])
+    np.testing.assert_equal(a @ b, nl.wrap(a) @ b)
 
 def test_numpy():
     a = np.array([1, 2, 4])
