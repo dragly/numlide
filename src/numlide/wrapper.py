@@ -31,6 +31,10 @@ class Wrapper:
     shape: Tuple[Any]
     inner: hl.Func
 
+    def __post_init__(self):
+        assert isinstance(self.shape, tuple), f"Wrapper shape must be tuple, found {type(self.shape)}"
+        assert isinstance(self.inner, hl.Func), f"Wrapper inner must be hl.Func, found {type(self.inner)}"
+
     def __getitem__(self, args):
 
         try:

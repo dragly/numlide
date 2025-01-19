@@ -73,6 +73,6 @@ def swapaxes(w: ArrayLike, axis1: int, axis2: int) -> Wrapper:
     inner[variables] = w.inner[variables_swapped]
 
     return Wrapper(
-        shape=shape_swapped,
+        shape=tuple(shape_swapped),
         inner=inner,
     )
