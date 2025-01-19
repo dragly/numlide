@@ -32,14 +32,26 @@ class Wrapper:
     inner: hl.Func
 
     def __getitem__(self, args):
-        left_variables = tuple()
-        right_variables = tuple()
-        shape = tuple()
 
         try:
             len(args)
         except:
             args = [args]
+
+        newaxis_count = args.count(None)
+
+        if len(args) > len(self.shape) + newaxis_count:
+            raise IndexError(
+                f"IndexError: too many indices for array: array is {len(self.shape)}-dimensional, but {len(args)} were indexed"
+            )
+
+        missing_args = len(self.shape) - len(args)
+        for _ in range(missing_args):
+            args.append(slice(None))
+
+        left_variables = tuple()
+        right_variables = tuple()
+        shape = tuple()
 
         for arg in args:
             left_index = len(left_variables)
@@ -285,6 +297,7 @@ class Wrapper:
 
     def __array_function__(self, func, types, args, kwargs):
         from . import math
+        from . import manipulation
 
         if not all(issubclass(t, Wrapper) for t in types):
             return NotImplemented
@@ -304,6 +317,12 @@ class Wrapper:
             return math.sum(*args, **kwargs)
         if func == np.var:
             return math.var(*args, **kwargs)
+        if func == np.split:
+            return manipulation.split(*args, **kwargs)
+        if func == np.array_split:
+            return manipulation.array_split(*args, **kwargs)
+        if func == np.swapaxes:
+            return manipulation.swapaxes(*args, **kwargs)
         return NotImplemented
 
 
