@@ -5,6 +5,7 @@ from collections.abc import Callable
 from .schedule import ScheduleStrategy
 from .wrapper import Wrapper, wrap
 from .utils import var_from_index, vars_from_shape, tr
+from .typing import ArrayLike
 import numpy as np
 
 
@@ -17,19 +18,19 @@ def apply(w: Wrapper, f: Callable[[hl.Expr], hl.Expr]) -> Wrapper:
     return Wrapper(inner=func, shape=w.shape)
 
 
-def sin(w: Wrapper) -> Wrapper:
+def sin(w: ArrayLike) -> Wrapper:
     return apply(w, hl.sin)
 
 
-def cos(w: Wrapper) -> Wrapper:
+def cos(w: ArrayLike) -> Wrapper:
     return apply(w, hl.cos)
 
 
-def tan(w: Wrapper) -> Wrapper:
+def tan(w: ArrayLike) -> Wrapper:
     return apply(w, hl.tan)
 
 
-def sqrt(w: Wrapper) -> Wrapper:
+def sqrt(w: ArrayLike) -> Wrapper:
     return apply(w, hl.sqrt)
 
 
@@ -86,7 +87,12 @@ def _reduce(
     return Wrapper(inner=f, shape=shape)
 
 
-def sum(w: Wrapper, keepdims: bool = False, axis: Optional[int | Tuple[int, ...]] = None, schedule_strategy=ScheduleStrategy.auto) -> Wrapper:
+def sum(
+    w: Wrapper,
+    keepdims: bool = False,
+    axis: Optional[int | Tuple[int, ...]] = None,
+    schedule_strategy=ScheduleStrategy.auto,
+) -> Wrapper:
     if not isinstance(w, Wrapper):
         w = wrap(w)
 
@@ -99,7 +105,9 @@ def sum(w: Wrapper, keepdims: bool = False, axis: Optional[int | Tuple[int, ...]
     return _reduce(w, impl=impl, axis=axis, keepdims=keepdims, schedule_strategy=schedule_strategy)
 
 
-def min(w: Wrapper, keepdims: bool = False, axis: Optional[int | Tuple[int]] = None, schedule_strategy=ScheduleStrategy.auto) -> Wrapper:
+def min(
+    w: Wrapper, keepdims: bool = False, axis: Optional[int | Tuple[int]] = None, schedule_strategy=ScheduleStrategy.auto
+) -> Wrapper:
     if not isinstance(w, Wrapper):
         w = wrap(w)
 
@@ -108,10 +116,12 @@ def min(w: Wrapper, keepdims: bool = False, axis: Optional[int | Tuple[int]] = N
         f[left_variables] = hl.minimum(w.inner[right_variables])
         return f
 
-    return _reduce(w, impl=impl,keepdims=keepdims, axis=axis, schedule_strategy=schedule_strategy)
+    return _reduce(w, impl=impl, keepdims=keepdims, axis=axis, schedule_strategy=schedule_strategy)
 
 
-def max(w: Wrapper, keepdims: bool=False, axis: Optional[int | Tuple[int]] = None, schedule_strategy=ScheduleStrategy.auto) -> Wrapper:
+def max(
+    w: Wrapper, keepdims: bool = False, axis: Optional[int | Tuple[int]] = None, schedule_strategy=ScheduleStrategy.auto
+) -> Wrapper:
     if not isinstance(w, Wrapper):
         w = wrap(w)
 
@@ -123,7 +133,12 @@ def max(w: Wrapper, keepdims: bool=False, axis: Optional[int | Tuple[int]] = Non
     return _reduce(w, impl=impl, axis=axis, keepdims=keepdims, schedule_strategy=schedule_strategy)
 
 
-def mean(w: Wrapper, axis: Optional[int | Tuple[int, ...]] = None, schedule_strategy=ScheduleStrategy.auto, keepdims: bool = False) -> Wrapper:
+def mean(
+    w: Wrapper,
+    axis: Optional[int | Tuple[int, ...]] = None,
+    schedule_strategy=ScheduleStrategy.auto,
+    keepdims: bool = False,
+) -> Wrapper:
     if not isinstance(w, Wrapper):
         w = wrap(w)
 
@@ -137,7 +152,10 @@ def mean(w: Wrapper, axis: Optional[int | Tuple[int, ...]] = None, schedule_stra
 
     return sum(w_f64, axis=deduced_axis, schedule_strategy=schedule_strategy, keepdims=keepdims) / summed_element_count
 
-def var(w: Wrapper, axis: Optional[int | Tuple[int]] = None, schedule_strategy=ScheduleStrategy.auto, keepdims: bool = False) -> Wrapper:
+
+def var(
+    w: Wrapper, axis: Optional[int | Tuple[int]] = None, schedule_strategy=ScheduleStrategy.auto, keepdims: bool = False
+) -> Wrapper:
     if not isinstance(w, Wrapper):
         w = wrap(w)
 
@@ -145,9 +163,10 @@ def var(w: Wrapper, axis: Optional[int | Tuple[int]] = None, schedule_strategy=S
     summed_element_count = np.prod(np.array(w.shape)[list(deduced_axis)])
 
     mean_value = mean(w, axis=axis, schedule_strategy=schedule_strategy, keepdims=True)
-    squared = (w - mean_value)**2
+    squared = (w - mean_value) ** 2
 
     return sum(squared, axis=deduced_axis, keepdims=keepdims) / summed_element_count
+
 
 def abs(w: Wrapper) -> Wrapper:
     if not isinstance(w, Wrapper):

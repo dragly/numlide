@@ -262,6 +262,7 @@ class Wrapper:
 
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
         from . import math
+
         if (
             method == "__call__"
             and len(inputs) == 2
@@ -276,11 +277,7 @@ class Wrapper:
                 return wrap(inputs[0]) > inputs[1]
             if ufunc == np.multiply:
                 return wrap(inputs[0]) * inputs[1]
-        if (
-            method == "__call__"
-            and len(inputs) == 1
-            and isinstance(inputs[0], Wrapper)
-        ):
+        if method == "__call__" and len(inputs) == 1 and isinstance(inputs[0], Wrapper):
             if ufunc == np.sqrt:
                 return math.sqrt(inputs[0])
 
@@ -315,7 +312,16 @@ def array(values):
     buffer = hl.Buffer(np_array).copy()
     inner = hl.Func("array")
     variables = vars_from_shape(np_array.shape)
-    inner[variables] = buffer[variables]
+    if len(variables) == 0:
+        if buffer.type() == hl.Float(32):
+            other = hl.f32(buffer[variables])
+        elif buffer.type() == hl.Float(64):
+            other = hl.f64(buffer[variables])
+        else:
+            other = buffer[variables]
+    else:
+        other = buffer[variables]
+    inner[variables] = other
     return Wrapper(inner=inner, shape=np_array.shape)
 
 

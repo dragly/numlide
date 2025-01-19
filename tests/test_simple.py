@@ -45,19 +45,35 @@ def test_math():
     compare(np.mean, nl.mean)
     compare(np.sum, nl.sum)
     compare(np.var, nl.var)
-    compare(np.sqrt, nl.sqrt, per_axis=False)
+
+
+def test_sqrt():
+    values = np.array([[1.2, 3.4, 5.6], [0.1, 0.2, 0.3]])
+    np.testing.assert_allclose(
+        np.sqrt(values),
+        nl.sqrt(values).to_numpy(),
+    )
+    np.testing.assert_allclose(
+        np.sqrt(values),
+        nl.sqrt(values).to_numpy(),
+    )
+    np.testing.assert_allclose(
+        np.sqrt(values),
+        np.sqrt(nl.wrap(values)),
+    )
+
 
 def test_matmul():
-    a = np.array([
-        [1, 2, 3],
-        [4, 5, 6]
-        ])
-    b = np.array([
-        [1, 2],
-        [4, 5],
-        [7, 8],
-    ])
+    a = np.array([[1, 2, 3], [4, 5, 6]])
+    b = np.array(
+        [
+            [1, 2],
+            [4, 5],
+            [7, 8],
+        ]
+    )
     np.testing.assert_equal(a @ b, nl.wrap(a) @ b)
+
 
 def test_numpy():
     a = np.array([1, 2, 4])
