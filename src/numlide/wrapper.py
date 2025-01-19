@@ -35,6 +35,12 @@ class Wrapper:
         left_variables = tuple()
         right_variables = tuple()
         shape = tuple()
+
+        try:
+            len(args)
+        except:
+            args = [args]
+
         for arg in args:
             left_index = len(left_variables)
             right_index = len(right_variables)
@@ -120,33 +126,41 @@ class Wrapper:
                 case _:
                     raise RuntimeError(f"Operation not supported: {operation}")
         else:
+            a = self.inner[variables]
+            if self.inner.type() == hl.Float(32):
+                b = hl.f32(other)
+            elif self.inner.type() == hl.Float(64):
+                b = hl.f64(other)
+            else:
+                b = other
+
             match operation:
                 case _Operation.add:
-                    f[variables] = self.inner[variables] + other
+                    f[variables] = a + b
                 case _Operation.sub:
-                    f[variables] = self.inner[variables] - other
+                    f[variables] = a - b
                 case _Operation.mul:
-                    f[variables] = self.inner[variables] * other
+                    f[variables] = a * b
                 case _Operation.truediv:
-                    f[variables] = self.inner[variables] / other
+                    f[variables] = a / b
                 case _Operation.floordiv:
-                    f[variables] = self.inner[variables] // other
+                    f[variables] = a // b
                 case _Operation.mod:
-                    f[variables] = self.inner[variables] % other
+                    f[variables] = a % b
                 case _Operation.pow_:
-                    f[variables] = self.inner[variables] ** other
+                    f[variables] = a**b
                 case _Operation.lt:
-                    f[variables] = self.inner[variables] < other
+                    f[variables] = a < b
                 case _Operation.gt:
-                    f[variables] = self.inner[variables] > other
+                    f[variables] = a > b
                 case _Operation.le:
-                    f[variables] = self.inner[variables] <= other
+                    f[variables] = a <= b
                 case _Operation.ge:
-                    f[variables] = self.inner[variables] >= other
+                    f[variables] = a >= b
                 case _Operation.eq:
-                    f[variables] = self.inner[variables] == other
+                    f[variables] = a == b
                 case _Operation.ne:
-                    f[variables] = self.inner[variables] != other
+                    f[variables] = a != b
                 case _:
                     raise RuntimeError(f"Operation not supported: {operation}")
             broadcast_shape = self.shape
@@ -248,6 +262,7 @@ class Wrapper:
 
     def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
         from . import math
+
         if (
             method == "__call__"
             and len(inputs) == 2
@@ -262,11 +277,7 @@ class Wrapper:
                 return wrap(inputs[0]) > inputs[1]
             if ufunc == np.multiply:
                 return wrap(inputs[0]) * inputs[1]
-        if (
-            method == "__call__"
-            and len(inputs) == 1
-            and isinstance(inputs[0], Wrapper)
-        ):
+        if method == "__call__" and len(inputs) == 1 and isinstance(inputs[0], Wrapper):
             if ufunc == np.sqrt:
                 return math.sqrt(inputs[0])
 
@@ -301,7 +312,16 @@ def array(values):
     buffer = hl.Buffer(np_array).copy()
     inner = hl.Func("array")
     variables = vars_from_shape(np_array.shape)
-    inner[variables] = buffer[variables]
+    if len(variables) == 0:
+        if buffer.type() == hl.Float(32):
+            other = hl.f32(buffer[variables])
+        elif buffer.type() == hl.Float(64):
+            other = hl.f64(buffer[variables])
+        else:
+            other = buffer[variables]
+    else:
+        other = buffer[variables]
+    inner[variables] = other
     return Wrapper(inner=inner, shape=np_array.shape)
 
 
