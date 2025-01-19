@@ -32,14 +32,26 @@ class Wrapper:
     inner: hl.Func
 
     def __getitem__(self, args):
-        left_variables = tuple()
-        right_variables = tuple()
-        shape = tuple()
 
         try:
             len(args)
         except:
             args = [args]
+
+        newaxis_count = args.count(None)
+
+        if len(args) > len(self.shape) + newaxis_count:
+            raise IndexError(
+                f"IndexError: too many indices for array: array is {len(self.shape)}-dimensional, but {len(args)} were indexed"
+            )
+
+        missing_args = len(self.shape) - len(args)
+        for _ in range(missing_args):
+            args.append(slice(None))
+
+        left_variables = tuple()
+        right_variables = tuple()
+        shape = tuple()
 
         for arg in args:
             left_index = len(left_variables)
