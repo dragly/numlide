@@ -297,6 +297,7 @@ class Wrapper:
 
     def __array_function__(self, func, types, args, kwargs):
         from . import math
+        from . import manipulation
 
         if not all(issubclass(t, Wrapper) for t in types):
             return NotImplemented
@@ -316,6 +317,12 @@ class Wrapper:
             return math.sum(*args, **kwargs)
         if func == np.var:
             return math.var(*args, **kwargs)
+        if func == np.split:
+            return manipulation.split(*args, **kwargs)
+        if func == np.array_split:
+            return manipulation.array_split(*args, **kwargs)
+        if func == np.swapaxes:
+            return manipulation.swapaxes(*args, **kwargs)
         return NotImplemented
 
 
