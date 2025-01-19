@@ -34,15 +34,22 @@ def sqrt(w: ArrayLike) -> Wrapper:
     return apply(w, hl.sqrt)
 
 
+def _wrap_axis(axis: int, ndim: int) -> int:
+    if axis >= 0:
+        return axis
+    else:
+        return ndim + axis
+
+
 def _deduce_axis(
     wrapper: Wrapper,
     axis: Optional[int | Tuple[int, ...]],
 ) -> Tuple[int, ...]:
     if axis is None:
-        return tuple(i for i in range(len(wrapper.shape)))
+        return tuple(i for i in range(wrapper.ndim))
     elif isinstance(axis, int):
-        return tuple((axis,))
-    return axis
+        return tuple((_wrap_axis(axis, ndim=wrapper.ndim),))
+    return tuple(_wrap_axis(ax, ndim=wrapper.ndim) for ax in axis)
 
 
 def _reduce(
