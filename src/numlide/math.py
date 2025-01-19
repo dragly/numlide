@@ -12,7 +12,7 @@ import numpy as np
 def apply(w: Wrapper, f: Callable[[hl.Expr], hl.Expr]) -> Wrapper:
     if not isinstance(w, Wrapper):
         w = wrap(w)
-    func = hl.Func(f.__name__)
+    func = hl.Func(f"apply_{f.__name__}")
     variables = vars_from_shape(w.shape)
     func[variables] = f(w.inner[variables])
     return Wrapper(inner=func, shape=w.shape)
@@ -32,6 +32,10 @@ def tan(w: ArrayLike) -> Wrapper:
 
 def sqrt(w: ArrayLike) -> Wrapper:
     return apply(w, hl.sqrt)
+
+
+def exp(w: ArrayLike) -> Wrapper:
+    return apply(w, hl.exp)
 
 
 def _wrap_axis(axis: int, ndim: int) -> int:

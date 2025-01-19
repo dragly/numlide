@@ -100,8 +100,8 @@ class Wrapper:
         if not (isinstance(other, Wrapper) or isinstance(other, int) or isinstance(other, float)):
             other = wrap(other)
         f = hl.Func(str(operation).split(".")[1])
-        variables = vars_from_shape(self.shape, zero_if_one=True)
         if isinstance(other, Wrapper):
+            variables = vars_from_shape(self.shape, zero_if_one=True)
             broadcast_shape = np.broadcast_shapes(self.shape, other.shape)
             new_variables = vars_from_shape(broadcast_shape)
             if len(other.shape) == 1 and len(broadcast_shape) > 1:
@@ -142,6 +142,7 @@ class Wrapper:
                 case _:
                     raise RuntimeError(f"Operation not supported: {operation}")
         else:
+            variables = vars_from_shape(self.shape)
             a = self.inner[variables]
             if self.inner.type() == hl.Float(32):
                 b = hl.f32(other)
@@ -296,6 +297,14 @@ class Wrapper:
         if method == "__call__" and len(inputs) == 1 and isinstance(inputs[0], Wrapper):
             if ufunc == np.sqrt:
                 return math.sqrt(inputs[0])
+            if ufunc == np.exp:
+                return math.exp(inputs[0])
+            if ufunc == np.cos:
+                return math.cos(inputs[0])
+            if ufunc == np.sin:
+                return math.sin(inputs[0])
+            if ufunc == np.tan:
+                return math.tan(inputs[0])
 
         return NotImplemented
 
@@ -362,6 +371,7 @@ def array(values):
     else:
         other = buffer[variables]
     inner[variables] = other
+
     return Wrapper(inner=inner, shape=np_array.shape)
 
 

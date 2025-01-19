@@ -23,7 +23,7 @@ def test_box_filter():
     np.testing.assert_allclose(result_nl.to_numpy(), result_np)
 
 
-def test_math():
+def test_reductions():
     np.random.seed(42)
     image = np.random.randn(640, 480)
 
@@ -50,20 +50,24 @@ def test_math():
     compare(np.var, nl.var)
 
 
-def test_sqrt():
+def test_math():
     values = np.array([[1.2, 3.4, 5.6], [0.1, 0.2, 0.3]])
-    np.testing.assert_allclose(
-        np.sqrt(values),
-        nl.sqrt(values).to_numpy(),
-    )
-    np.testing.assert_allclose(
-        np.sqrt(values),
-        nl.sqrt(values).to_numpy(),
-    )
-    np.testing.assert_allclose(
-        np.sqrt(values),
-        np.sqrt(nl.wrap(values)),
-    )
+
+    def compare(np_method, nl_method):
+        np.testing.assert_allclose(
+            np_method(values),
+            nl_method(values).to_numpy(),
+        )
+        np.testing.assert_allclose(
+            np_method(values),
+            np_method(nl.wrap(values)),
+        )
+
+    compare(np.sqrt, nl.sqrt)
+    compare(np.exp, nl.exp)
+    compare(np.cos, nl.cos)
+    compare(np.sin, nl.sin)
+    compare(np.tan, nl.tan)
 
 
 def test_matmul():
