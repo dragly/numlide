@@ -1,7 +1,7 @@
 # This code is derived from NumPy, licensed under the BSD 3-Clause License.
 # See third-party/licenses/numpy.txt for details.
 
-from typing import Any, Optional, Tuple
+from typing import Any, Optional, Sequence, Tuple
 import halide as hl
 from collections.abc import Callable
 
@@ -76,3 +76,26 @@ def swapaxes(w: ArrayLike, axis1: int, axis2: int) -> Wrapper:
         shape=tuple(shape_swapped),
         inner=inner,
     )
+
+
+def _sequence_to_numpy(tup: Sequence[ArrayLike]) -> Sequence[ArrayLike]:
+    return [arr.to_numpy() if isinstance(arr, Wrapper) else arr for arr in tup]
+
+
+def concatenate(
+    tup: Sequence[ArrayLike],
+    *args,
+    **kwargs,
+) -> Wrapper:
+    result_np = np.concatenate(_sequence_to_numpy(tup), *args, **kwargs)
+    return wrap(result_np)
+
+
+def hstack(tup: Sequence[ArrayLike], *args, **kwargs) -> Wrapper:
+    result_np = np.hstack(_sequence_to_numpy(tup), *args, **kwargs)
+    return wrap(result_np)
+
+
+def vstack(tup: Sequence[ArrayLike], *args, **kwargs) -> Wrapper:
+    result_np = np.vstack(_sequence_to_numpy(tup), *args, **kwargs)
+    return wrap(result_np)

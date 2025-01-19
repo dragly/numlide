@@ -1,4 +1,5 @@
 import numlide as nl
+import halide as hl
 import numpy as np
 
 

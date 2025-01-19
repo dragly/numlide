@@ -336,6 +336,12 @@ class Wrapper:
             return manipulation.array_split(*args, **kwargs)
         if func == np.swapaxes:
             return manipulation.swapaxes(*args, **kwargs)
+        if func == np.hstack:
+            return manipulation.hstack(*args, **kwargs)
+        if func == np.vstack:
+            return manipulation.vstack(*args, **kwargs)
+        if func == np.concatenate:
+            return manipulation.concatenate(*args, **kwargs)
         return NotImplemented
 
     @property

@@ -8,7 +8,7 @@ from . import linalg
 from .math import sin, cos, tan, sqrt, sum, mean, min, max, var, exp
 from .wrapper import Wrapper, wrap, array
 from .ranges import arange
-from .manipulation import array_split, split, swapaxes
+from .manipulation import array_split, split, swapaxes, concatenate, hstack
 from . import typing
 
 newaxis = np.newaxis

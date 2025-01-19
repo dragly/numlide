@@ -21,3 +21,22 @@ def test_array_split():
 
     x = np.arange(9)
     np.testing.assert_equal(np.array_split(x, 4), nl.array_split(x, 4))
+
+
+def test_concatenate():
+    a = np.array([[1, 2], [3, 4]])
+    b = np.array([[5, 6]])
+    np.testing.assert_equal(
+        np.concatenate((a, b), axis=0),
+        nl.concatenate(
+            (a, b),
+            axis=0,
+        ),
+    )
+    np.testing.assert_equal(
+        np.concatenate((a, b.T), axis=1),
+        nl.concatenate(
+            (a, b.T),
+            axis=1,
+        ),
+    )
