@@ -2,24 +2,6 @@ import numpy as np
 import numlide as nl
 
 
-def _create_image():
-    return np.random.randn(1920, 2560)
-
-
-def test_structured_light_numpy(benchmark):
-    image = _create_image()
-
-    benchmark(np.mean, image)
-
-
-def test_structured_light_numlide(benchmark):
-    image = _create_image()
-    image_wrapped = nl.wrap(image)
-    np.testing.assert_allclose(image, image_wrapped.to_numpy())
-
-    benchmark(nl.mean, image)
-
-
 def _structured_light(m, images):
     patterns = images.shape[-1]
     minimum = m.min(images, axis=2)
@@ -68,5 +50,3 @@ def test_structured_light_numpy(benchmark):
     images = _create_patterns()
 
     benchmark(_structured_light, np, images)
-
-

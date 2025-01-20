@@ -12,7 +12,7 @@ import numpy as np
 def apply(w: Wrapper, f: Callable[[hl.Expr], hl.Expr]) -> Wrapper:
     if not isinstance(w, Wrapper):
         w = wrap(w)
-    func = hl.Func(f.__name__)
+    func = hl.Func(f"apply_{f.__name__}")
     variables = vars_from_shape(w.shape)
     func[variables] = f(w.inner[variables])
     return Wrapper(inner=func, shape=w.shape)
@@ -30,8 +30,23 @@ def tan(w: ArrayLike) -> Wrapper:
     return apply(w, hl.tan)
 
 
+def tanh(w: ArrayLike) -> Wrapper:
+    return apply(w, hl.tanh)
+
+
 def sqrt(w: ArrayLike) -> Wrapper:
     return apply(w, hl.sqrt)
+
+
+def exp(w: ArrayLike) -> Wrapper:
+    return apply(w, hl.exp)
+
+
+def _wrap_axis(axis: int, ndim: int) -> int:
+    if axis >= 0:
+        return axis
+    else:
+        return ndim + axis
 
 
 def _deduce_axis(
@@ -39,10 +54,10 @@ def _deduce_axis(
     axis: Optional[int | Tuple[int, ...]],
 ) -> Tuple[int, ...]:
     if axis is None:
-        return tuple(i for i in range(len(wrapper.shape)))
+        return tuple(i for i in range(wrapper.ndim))
     elif isinstance(axis, int):
-        return tuple((axis,))
-    return axis
+        return tuple((_wrap_axis(axis, ndim=wrapper.ndim),))
+    return tuple(_wrap_axis(ax, ndim=wrapper.ndim) for ax in axis)
 
 
 def _reduce(
@@ -129,6 +144,23 @@ def max(
         f = hl.Func("max")
         f[left_variables] = hl.maximum(w.inner[right_variables])
         return f
+
+    return _reduce(w, impl=impl, axis=axis, keepdims=keepdims, schedule_strategy=schedule_strategy)
+
+
+def argmax(
+    w: Wrapper, keepdims: bool = False, axis: Optional[int | Tuple[int]] = None, schedule_strategy=ScheduleStrategy.auto
+) -> Wrapper:
+    if not isinstance(w, Wrapper):
+        w = wrap(w)
+
+    def impl(left_variables, right_variables) -> hl.Func:
+        f = hl.Func("argmax")
+        f[left_variables] = hl.argmax(w.inner[right_variables])[0]
+        return f
+
+    if axis is None:
+        w = w.flatten()
 
     return _reduce(w, impl=impl, axis=axis, keepdims=keepdims, schedule_strategy=schedule_strategy)
 
