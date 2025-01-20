@@ -38,7 +38,6 @@ class Wrapper:
         assert isinstance(self.inner, hl.Func), f"Wrapper inner must be hl.Func, found {type(self.inner)}"
 
     def __getitem__(self, args):
-
         try:
             len(args)
         except:
@@ -97,6 +96,80 @@ class Wrapper:
         f = hl.Func("getitem")
         f[tr(left_variables)] = self.inner[tr(right_variables)]
         return Wrapper(inner=f, shape=shape)
+
+    def __setitem__(self, args, other):
+        try:
+            len(args)
+        except:
+            args = [args]
+
+        if not isinstance(other, Wrapper):
+            other = wrap(other)
+
+        shape_diff = len(self.shape) - len(other.shape)
+        if shape_diff < 0:
+            raise ValueError(f"Cannot set item with shape {other.shape} into shape {self.shape}")
+
+        if shape_diff > 0:
+            other_args = []
+            for _ in range(other.ndim):
+                other_args.append(slice(None))
+            for _ in range(shape_diff):
+                other_args.append(None)
+            other = other[tuple(other_args)]
+
+        newaxis_count = args.count(None)
+
+        if len(args) > len(self.shape) + newaxis_count:
+            raise IndexError(
+                f"IndexError: too many indices for array: array is {len(self.shape)}-dimensional, but {len(args)} were indexed"
+            )
+
+        missing_args = len(self.shape) - len(args)
+        for _ in range(missing_args):
+            args.append(slice(None))
+
+        left_variables = tuple()
+        right_variables = tuple()
+        shape = tuple()
+
+        for arg in args:
+            left_index = len(left_variables)
+            right_index = len(right_variables)
+            var = var_from_index(left_index)
+            if arg is None:
+                raise NotImplementedError("Setting with None / newaxis not supported")
+            elif isinstance(arg, int):
+                left_variables += (arg,)
+                right_variables += (arg,)
+            elif isinstance(arg, slice):
+                step = 1 if arg.step is None else arg.step
+
+                shaped = self.shape[right_index]
+
+                if arg.start is None:
+                    start = 0
+                elif arg.start < 0:
+                    start = shaped + arg.start
+                else:
+                    start = arg.start
+
+                if arg.stop is None:
+                    stop = shaped
+                elif arg.stop < 0:
+                    stop = shaped + arg.stop
+                else:
+                    stop = arg.stop
+
+                extent = calculate_extent(start, stop, step)
+                halide_step = 0 if extent == 1 else step
+                rdom = hl.RDom([(start, extent)])
+                left_variables += (halide_step * rdom,)
+                right_variables += (halide_step * rdom,)
+            else:
+                raise NotImplementedError(f"Argument not supported: `{arg}` is of type `{type(arg)}`")
+        other_value = other.inner[tr(right_variables)]
+        self.inner[tr(left_variables)] = hl.cast(self.inner.type(), other_value)
 
     def _perform_operation(self, other, operation: _Operation) -> Wrapper:
         if not (isinstance(other, Wrapper) or isinstance(other, int) or isinstance(other, float)):
@@ -253,9 +326,7 @@ class Wrapper:
                     yi,
                     yii,
                     inner_tile_y,
-                ).vectorize(
-                    xi, vec
-                ).unroll(xi).unroll(yii).fuse(xo, yo, xy).parallel(xy)
+                ).vectorize(xi, vec).unroll(xi).unroll(yii).fuse(xo, yo, xy).parallel(xy)
                 ko = hl.RVar("ko")
                 ki = hl.RVar("ki")
                 z = hl.Var("z")
@@ -281,9 +352,7 @@ class Wrapper:
                 ).reorder(x, yi, y, ko).vectorize(
                     x,
                     vec,
-                ).unroll(
-                    x
-                ).unroll(yi)
+                ).unroll(x).unroll(yi)
 
                 output.bound(x, 0, output_size).bound(y, 0, output_size)
                 output.compute_root()

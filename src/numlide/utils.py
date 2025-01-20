@@ -26,3 +26,31 @@ def vars_from_shape(shape: Tuple[int], zero_if_one: bool = False) -> Tuple[hl.Va
 
 def calculate_extent(start, stop, step):
     return int(np.ceil(np.abs(stop - start) / np.max([np.abs(step), 1])))
+
+
+def halide_type(dtype: Any) -> hl.Type:
+    match dtype:
+        case np.float32:
+            return hl.Float(32)
+        case np.float64:
+            return hl.Float(64)
+        case np.int8:
+            return hl.Int(8)
+        case np.int16:
+            return hl.Int(16)
+        case np.int32:
+            return hl.Int(32)
+        case np.int64:
+            return hl.Int(64)
+        case np.uint8:
+            return hl.UInt(8)
+        case np.uint16:
+            return hl.UInt(16)
+        case np.uint32:
+            return hl.UInt(32)
+        case np.uint64:
+            return hl.UInt(64)
+        case np.bool_:
+            return hl.Bool()
+        case _:
+            raise ValueError(f"Unsupported dtype: {dtype}")
