@@ -5,6 +5,8 @@ from typing import Any, Optional, Sequence, Tuple
 import halide as hl
 import numpy as np
 from dataclasses import dataclass
+
+from numlide.schedule import ScheduleStrategy
 from .utils import calculate_extent, var_from_index, vars_from_shape, tr
 from itertools import zip_longest
 
@@ -201,16 +203,95 @@ class Wrapper:
     def __rmul__(self, other) -> Wrapper:
         return self * other
 
-    def __matmul__(self, other) -> Wrapper:
+    def __matmul__(
+        self,
+        other,
+        schedule_strategy=ScheduleStrategy.auto,
+    ) -> Wrapper:
         if not (isinstance(other, Wrapper)):
             other = wrap(other)
-        f = hl.Func("matmul")
-        variables = vars_from_shape(self.shape)
-        r = hl.RDom([(0, self.shape[-1])])
-        f[variables] = hl.cast(self.inner.type(), 0)
-        f[variables] += self.inner[(r,) + variables[1:]] * other.inner[tuple(variables[:-1]) + (r,)]
-        new_shape = self.shape[:-1] + other.shape[1:]
-        return Wrapper(inner=f, shape=new_shape)
+        a = wrap(self.to_numpy())
+        b = wrap(other.to_numpy())
+        matmul = hl.Func("matmul_impl")
+        variables = vars_from_shape(a.shape)
+        matrix_size = a.shape[-1]
+        k = hl.RDom([(0, matrix_size)])
+        matmul[variables] = hl.cast(a.inner.type(), 0)
+        matmul[variables] += a.inner[(k,) + variables[1:]] * b.inner[tuple(variables[:-1]) + (k,)]
+        output = hl.Func("matmul")
+        output[variables] = matmul[variables]
+        output_size = a.shape[0]
+        if schedule_strategy == ScheduleStrategy.auto:
+            x = variables[0]
+            y = variables[1]
+            xy = hl.Var("xy")
+            xi = hl.Var("xi")
+            yi = hl.Var("yi")
+            xo = hl.Var("xo")
+            yo = hl.Var("yo")
+            yii = hl.Var("yii")
+            if output_size > 32 and matrix_size > 32:
+                # schedule copied from
+                # https://github.com/halide/Halide/blob/bf65d521d69d75c0ffa9459cdf797886b1bc77e2/test/performance/matrix_multiplication.cpp
+                target = hl.get_jit_target_from_environment()
+                vec = target.natural_vector_size(a.inner.type())
+                inner_tile_x = 3 * vec
+                inner_tile_y = 8
+                tile_y = output_size // 4
+                tile_k = matrix_size // 16
+                output.tile(
+                    x,
+                    y,
+                    xo,
+                    yo,
+                    xi,
+                    yi,
+                    inner_tile_x,
+                    tile_y,
+                ).split(
+                    yi,
+                    yi,
+                    yii,
+                    inner_tile_y,
+                ).vectorize(
+                    xi, vec
+                ).unroll(xi).unroll(yii).fuse(xo, yo, xy).parallel(xy)
+                ko = hl.RVar("ko")
+                ki = hl.RVar("ki")
+                z = hl.Var("z")
+                matmul.update().split(
+                    k,
+                    ko,
+                    ki,
+                    tile_k,
+                )
+                intm = matmul.update().rfactor(ko, z)
+
+                intm.compute_at(matmul, y).vectorize(x, vec).unroll(x).unroll(y)
+
+                intm.update(0).reorder(x, y, ki).vectorize(x, vec).unroll(x).unroll(y)
+
+                matmul.compute_at(output, xy).vectorize(x, vec).unroll(x)
+
+                matmul.update().split(
+                    y,
+                    y,
+                    yi,
+                    inner_tile_y,
+                ).reorder(x, yi, y, ko).vectorize(
+                    x,
+                    vec,
+                ).unroll(
+                    x
+                ).unroll(yi)
+
+                output.bound(x, 0, output_size).bound(y, 0, output_size)
+                output.compute_root()
+            else:
+                output.tile(x, y, xo, yo, xi, yi, 4, 4).vectorize(xi, 4)
+                output.compute_root()
+        new_shape = a.shape[:-1] + b.shape[1:]
+        return Wrapper(inner=output, shape=new_shape)
 
     def __truediv__(self, other) -> Wrapper:
         return self._perform_operation(other, _Operation.truediv)
@@ -243,7 +324,11 @@ class Wrapper:
         return self._perform_operation(other, _Operation.le)
 
     def realize(self):
-        return self.inner.realize(tr(self.shape))
+        # self.inner.print_loop_nest()
+        # print(f"Realizing {self.shape}")
+        result = self.inner.realize(tr(self.shape))
+        # print("Realizing done")
+        return result
 
     def to_halide(self):
         return self.realize()
@@ -283,7 +368,7 @@ class Wrapper:
         if (
             method == "__call__"
             and len(inputs) == 2
-            and isinstance(inputs[0], np.ndarray)
+            and isinstance(inputs[0], (np.ndarray, float))
             and isinstance(inputs[1], Wrapper)
         ):
             if ufunc == np.add:
@@ -305,6 +390,8 @@ class Wrapper:
                 return math.sin(inputs[0])
             if ufunc == np.tan:
                 return math.tan(inputs[0])
+            if ufunc == np.tanh:
+                return math.tanh(inputs[0])
 
         return NotImplemented
 
@@ -320,6 +407,8 @@ class Wrapper:
             return math.min(*args, **kwargs)
         if func == np.max:
             return math.max(*args, **kwargs)
+        if func == np.argmax:
+            return math.argmax(*args, **kwargs)
         if func == np.iscomplexobj:
             return False
         if func == np.abs:
@@ -343,6 +432,9 @@ class Wrapper:
         if func == np.concatenate:
             return manipulation.concatenate(*args, **kwargs)
         return NotImplemented
+
+    def flatten(self):
+        return wrap(self.to_numpy().flatten())
 
     @property
     def ndim(self):

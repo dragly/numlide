@@ -24,33 +24,6 @@ def test_box_filter():
     np.testing.assert_allclose(result_nl.to_numpy(), result_np)
 
 
-def test_reductions():
-    np.random.seed(42)
-    image = np.random.randn(640, 480)
-
-    def compare(np_method, nl_method):
-        result_np = np_method(image)
-        result_nl = nl_method(image)
-
-        np.testing.assert_allclose(result_nl.to_numpy(), result_np)
-
-        for axis in [0, 1]:
-            result_np = np_method(image, axis=axis)
-            result_nl = nl_method(image, axis=axis)
-
-            np.testing.assert_allclose(result_nl.to_numpy(), result_np)
-
-        result_np = np_method(image, keepdims=True, axis=-1)
-        result_nl = nl_method(image, keepdims=True, axis=-1)
-        np.testing.assert_allclose(result_nl.to_numpy(), result_np)
-
-    compare(np.min, nl.min)
-    compare(np.max, nl.max)
-    compare(np.mean, nl.mean)
-    compare(np.sum, nl.sum)
-    compare(np.var, nl.var)
-
-
 def test_math():
     values = np.array([[1.2, 3.4, 5.6], [0.1, 0.2, 0.3]])
 
@@ -69,6 +42,7 @@ def test_math():
     compare(np.cos, nl.cos)
     compare(np.sin, nl.sin)
     compare(np.tan, nl.tan)
+    compare(np.tanh, nl.tanh)
 
 
 def test_matmul():

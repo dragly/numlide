@@ -30,6 +30,10 @@ def tan(w: ArrayLike) -> Wrapper:
     return apply(w, hl.tan)
 
 
+def tanh(w: ArrayLike) -> Wrapper:
+    return apply(w, hl.tanh)
+
+
 def sqrt(w: ArrayLike) -> Wrapper:
     return apply(w, hl.sqrt)
 
@@ -140,6 +144,23 @@ def max(
         f = hl.Func("max")
         f[left_variables] = hl.maximum(w.inner[right_variables])
         return f
+
+    return _reduce(w, impl=impl, axis=axis, keepdims=keepdims, schedule_strategy=schedule_strategy)
+
+
+def argmax(
+    w: Wrapper, keepdims: bool = False, axis: Optional[int | Tuple[int]] = None, schedule_strategy=ScheduleStrategy.auto
+) -> Wrapper:
+    if not isinstance(w, Wrapper):
+        w = wrap(w)
+
+    def impl(left_variables, right_variables) -> hl.Func:
+        f = hl.Func("argmax")
+        f[left_variables] = hl.argmax(w.inner[right_variables])[0]
+        return f
+
+    if axis is None:
+        w = w.flatten()
 
     return _reduce(w, impl=impl, axis=axis, keepdims=keepdims, schedule_strategy=schedule_strategy)
 

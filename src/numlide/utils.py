@@ -14,7 +14,7 @@ def tr(values: Sequence[hl.Var | hl.Expr]) -> Tuple[hl.Var | hl.Expr]:
     return tuple(reversed(values))
 
 
-def vars_from_shape(shape: Tuple[int], zero_if_one: bool = False) -> Tuple[hl.Var]:
+def vars_from_shape(shape: Tuple[int], zero_if_one: bool = False) -> Tuple[hl.Var, ...]:
     variables = tuple()
     for i in range(len(shape)):
         if zero_if_one and shape[i] == 1:
