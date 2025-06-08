@@ -326,7 +326,9 @@ class Wrapper:
                     yi,
                     yii,
                     inner_tile_y,
-                ).vectorize(xi, vec).unroll(xi).unroll(yii).fuse(xo, yo, xy).parallel(xy)
+                ).vectorize(
+                    xi, vec
+                ).unroll(xi).unroll(yii).fuse(xo, yo, xy).parallel(xy)
                 ko = hl.RVar("ko")
                 ki = hl.RVar("ki")
                 z = hl.Var("z")
@@ -352,12 +354,14 @@ class Wrapper:
                 ).reorder(x, yi, y, ko).vectorize(
                     x,
                     vec,
-                ).unroll(x).unroll(yi)
+                ).unroll(
+                    x
+                ).unroll(yi)
 
                 output.bound(x, 0, output_size).bound(y, 0, output_size)
                 output.compute_root()
             else:
-                output.tile(x, y, xo, yo, xi, yi, 4, 4).vectorize(xi, 4)
+                output.tile(x, y, xo, yo, xi, yi, 4, 4, tail=hl.TailStrategy.GuardWithIf).vectorize(xi, 4)
                 output.compute_root()
         new_shape = a.shape[:-1] + b.shape[1:]
         return Wrapper(inner=output, shape=new_shape)
