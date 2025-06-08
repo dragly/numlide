@@ -293,7 +293,8 @@ class Wrapper:
         matmul[variables] += a.inner[(k,) + variables[1:]] * b.inner[tuple(variables[:-1]) + (k,)]
         output = hl.Func("matmul")
         output[variables] = matmul[variables]
-        output_size = a.shape[0]
+        new_shape = a.shape[:-1] + b.shape[1:]
+        output_size = new_shape[0]
         if schedule_strategy == ScheduleStrategy.auto:
             x = variables[0]
             y = variables[1]
@@ -321,14 +322,14 @@ class Wrapper:
                     yi,
                     inner_tile_x,
                     tile_y,
+                    tail=hl.TailStrategy.GuardWithIf,
                 ).split(
                     yi,
                     yi,
                     yii,
                     inner_tile_y,
-                ).vectorize(
-                    xi, vec
-                ).unroll(xi).unroll(yii).fuse(xo, yo, xy).parallel(xy)
+                    tail=hl.TailStrategy.GuardWithIf,
+                ).vectorize(xi, vec).unroll(xi).unroll(yii).fuse(xo, yo, xy).parallel(xy)
                 ko = hl.RVar("ko")
                 ki = hl.RVar("ki")
                 z = hl.Var("z")
@@ -337,6 +338,7 @@ class Wrapper:
                     ko,
                     ki,
                     tile_k,
+                    tail=hl.TailStrategy.GuardWithIf,
                 )
                 intm = matmul.update().rfactor(ko, z)
 
@@ -351,12 +353,10 @@ class Wrapper:
                     y,
                     yi,
                     inner_tile_y,
-                ).reorder(x, yi, y, ko).vectorize(
-                    x,
-                    vec,
-                ).unroll(
-                    x
-                ).unroll(yi)
+                    tail=hl.TailStrategy.GuardWithIf,
+                ).reorder(
+                    x, yi, y, ko
+                ).vectorize(x, vec,).unroll(x).unroll(yi)
 
                 output.bound(x, 0, output_size).bound(y, 0, output_size)
                 output.compute_root()
