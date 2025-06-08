@@ -363,8 +363,9 @@ class Wrapper:
             else:
                 output.tile(x, y, xo, yo, xi, yi, 4, 4, tail=hl.TailStrategy.GuardWithIf).vectorize(xi, 4)
                 output.compute_root()
-        new_shape = a.shape[:-1] + b.shape[1:]
-        return Wrapper(inner=output, shape=new_shape)
+
+        result = output.realize(tr(new_shape))
+        return wrap(result)
 
     def __truediv__(self, other) -> Wrapper:
         return self._perform_operation(other, _Operation.truediv)
@@ -528,10 +529,20 @@ class Wrapper:
 
 
 def array(values):
-    np_array = np.array(values)
-    buffer = hl.Buffer(np_array).copy()
+    if isinstance(values, hl.Buffer):
+        buffer = values
+        variables = tuple()
+        shape = tuple()
+        for i in range(buffer.dimensions()):
+            variables += (var_from_index(i),)
+            shape += (buffer.dim(i).extent(),)
+    else:
+        np_array = np.array(values)
+        buffer = hl.Buffer(np_array).copy()
+        variables = vars_from_shape(np_array.shape)
+        shape = np_array.shape
+
     inner = hl.Func("array")
-    variables = vars_from_shape(np_array.shape)
     if len(variables) == 0:
         if buffer.type() == hl.Float(32):
             other = hl.f32(buffer[variables])
@@ -543,7 +554,7 @@ def array(values):
         other = buffer[variables]
     inner[variables] = other
 
-    return Wrapper(inner=inner, shape=np_array.shape)
+    return Wrapper(inner=inner, shape=shape)
 
 
 def wrap(values):
